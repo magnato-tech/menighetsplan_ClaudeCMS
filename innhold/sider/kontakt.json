@@ -1,0 +1,17 @@
+{
+  "slug": "kontakt",
+  "tittel": "Kontakt",
+  "meny": {
+    "vis": true,
+    "rekkefolge": 3
+  },
+  "modellVersjon": 1,
+  "blokker": [
+    {
+      "id": "c9d0e1f2",
+      "type": "tekst",
+      "tekst": "Har du spørsmål eller ønsker å komme i kontakt med oss? Vi setter pris på høre fra deg.\n\n## Kontaktinformasjon\n\nE-post: kontakt@lillesand-misjon.no\n\nTelefon: +47 37 27 03 80\n\nAdresse: Lillesand Misjonskirke, Lillesand, Norge\n\n## Besøk oss\n\nVi holder gudstjenester hver søndag kl. 10:00. Alle er velkomne! Menigheten vår ligger i hjertet av Lillesand og er lett tilgjengelig for både medlemmer og gjester."
+    }
+  ],
+  "sistEndret": "2026-09-27T00:00:00Z"
+}

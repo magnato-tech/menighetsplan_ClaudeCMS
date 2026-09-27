@@ -1,0 +1,12 @@
+{
+  "name": "lillesand-misjonskirke-cms",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Enkelt CMS for Lillesand Misjonskirke – arrangementer fra iCal-kalender",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  }
+}

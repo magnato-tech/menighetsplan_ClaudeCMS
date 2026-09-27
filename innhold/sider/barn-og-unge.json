@@ -1,0 +1,17 @@
+{
+  "slug": "barn-og-unge",
+  "tittel": "Barn og unge",
+  "meny": {
+    "vis": true,
+    "rekkefolge": 2
+  },
+  "modellVersjon": 1,
+  "blokker": [
+    {
+      "id": "b5c6d7e8",
+      "type": "tekst",
+      "tekst": "Vi tilbyr aktiviteter for barn og unge fra barnehagealder og oppover. Alle er velkommer til å delta i våre program og arrangementer.\n\n## Aktiviteter\n- Søndagsskole for barn\n- Ungdomsgruppe på fredager\n- Sommerleirsamling\n- Bibelstudie og spirituell dybde\n\nTakk for at dere tar del i menighetslivet vårt! For mer informasjon, kontakt oss på kontakt@lillesand-misjon.no"
+    }
+  ],
+  "sistEndret": "2026-09-27T00:00:00Z"
+}
