@@ -1,8 +1,8 @@
 # Prosjektdokument: Menighets-CMS
 
-*Sist oppdatert: 2026-09-28, etter Sprint 8 (Claude tok over som prosjektleder igjen etter at GAIS avsluttet sitt arbeid). Neste: se punkt 10.*
+*Sist oppdatert: 2026-09-29, etter Sprint 15. Neste: se punkt 10 — alt gjenstående krever nå PO (spesielt Cloud Run-tilgangen, se punkt 13).*
 
-> **Ny økt? Start her:** Les dette dokumentet, så punkt 9–14. Kjør neste sprint i punkt 10 uten å spørre om lov på forhånd, og rapporter til PO etterpå. Oppdater punkt 9 og 10 når sprinten er ferdig.
+> **Ny økt? Start her:** Les dette dokumentet, så punkt 9–14. **Kjør ALLTID `git fetch && git log HEAD..origin/master` før du bygger videre** — en annen (cloud/mobil) økt kan ha pushet siden sist (jf. Sprint 14-hendelsen). Kjør neste sprint i punkt 10 uten å spørre om lov på forhånd, og rapporter til PO etterpå. Oppdater punkt 9 og 10 når sprinten er ferdig.
 
 ## 1. Formål
 Et enkelt, vedlikeholdsfritt CMS (offentlig nettside) for Lillesand Misjonskirke, der **mesteparten av innholdet genereres automatisk** fra menighetsappen **Menighetsplan 2.0** ([Menighetsplan2.0_mobil](https://github.com/magnato-tech/Menighetsplan2.0_mobil)). CMS-et skal med tiden **erstatte eRedaktør** og ta over `lillesandmisjonskirke.no`.
@@ -178,7 +178,7 @@ To PO-beslutninger tatt i forbindelse med opprydningen:
 - `/bli-med` (`lib/visning/bli-med.js`, nytt): viser tjenestegrupper og husfellesskap som kort, kun offentlig-trygge felt (navn, kategori, beskrivelse — aldri medlemmer/ledere/kontaktinfo). Lenke i toppmenyen.
 - **«Fremhevet» er omdøpt til «Nyheter og aktuelt»** på forsiden (PO-beslutning), med bildekort i stedet for tekstrader. `lib/innhold/overstyringer.js` fikk `settBilde(uid, filnavn)`. Bildeopplasting i `/admin/arrangementer` gjenbruker Sprint 12 sin multipart/`lib/innhold/bilder.js`-infrastruktur (ekte filopplasting, ikke en limt-inn URL) — samme mønster som bilder på faste sider.
 - «Hent nå» i admin oppdaterer nå både arrangementer og grupper.
-- Mock er fortsatt datakilden for grupper (se punkt 10 om hvorfor), samme status som arrangementer.
+- Mock er fortsatt datakilden for grupper (se punkt 13 for hvorfor), samme status som arrangementer.
 - Verifisert av Claude: `node --test` (134/134), curl-flyt for grupper-parsing, og i nettleserpanelet: `/bli-med` viser alle fire mock-gruppene korrekt, full opplastingsflyt (ekte PNG → fremhevet arrangement får bildekort på forsiden → fjern bilde-avkrysning → forsvinner igjen). All testdata og det midlertidig opplastede testbildet ryddet bort etterpå (`arrangement-overstyringer.json` bekreftet `{}`, `innhold/bilder/` tom).
 
 ## 11. Kodestruktur og prinsipper for fleksibilitet (Sprint 3a)
