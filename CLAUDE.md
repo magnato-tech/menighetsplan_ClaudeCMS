@@ -140,7 +140,14 @@ Et enkelt, vedlikeholdsfritt CMS (offentlig nettside) for Lillesand Misjonskirke
 - **Omdirigeringsmekanisme** for gamle eRedaktør-lenker: ny modul `lib/innhold/omdirigeringer.js` + tom tabell `innhold/omdirigeringer.json` (`{}`, klar for PO å fylle inn), koblet inn i `server.js` rett før 404-håndtering (301-redirect ved treff).
 - Claude fant og rettet selv en feil i én av agentenes tester (brukte `require()` i en ESM-fil) før commit — verifisert med `node --test` (100/100) og egen curl-smoketest av server.
 
-**Neste steg:** PO tester ekte API-tilkobling lokalt. Uavhengig av dette: PO kan når som helst legge inn ekte tekst på de faste sidene via admin, eller begynne å fylle inn `innhold/omdirigeringer.json` med kjente gamle URL-er fra eRedaktør (gjeldslogg, punkt 13).
+**Sprint 9** ✅ Forberedt ekte hosting-URL (`render.yaml`, se punkt 14) og satt opp `SessionStart`-hook for Claude Code on the web (kun mobilbruk, se punkt 14).
+
+**Sprint 10** ✅ Alt gjenstående i gjeldsloggen er nå PO-avhengig (ekte tekst, lokal API-verifisering, gamle URL-er, hosting), så Claude brukte sprinten på en kvalitetsgjennomgang (`/code-review --level high`) av alt Haiku-agentene skrev i Sprint 8–9, siden det ikke hadde fått samme grundige gjennomgang som tidligere sprinter (jf. punkt 15-praksisen). To reelle funn, begge rettet og verifisert (`node --test`: 100/100, pluss manuell curl-sjekk):
+- `render.yaml` sitt persistente volum var kun montert på `innhold/`, ikke `data/` — cache-fallback-filen (`lib/arrangementer.js`) ville dermed forsvunnet ved hver omstart på Render, stikk i strid med selve poenget med fallback-mekanismen. Flyttet cache-filen til `innhold/cache/siste-vellykkede.json` (inni det som faktisk persisteres), oppdatert README.
+- `lib/visning/forside.js` kalte `anvendOverstyringer()` to ganger på identisk data (for å hente hhv. `fremhevede` og `resten`/`allNotHidden`) — slått sammen til ett kall.
+- **Bifunn, ikke fra code-review:** `.gitignore` hadde feil filnavn for cache-filen (`data/siste-vellykkede.ics`, en `.ics`-rest fra før prosjektet gikk over til JSON-kontrakten) — selve `.json`-cachefilen har dermed ligget **committet i git siden Sprint 3b**. Ikke sensitivt (kun offentlig arrangementsdata), men unødvendig i versjonskontroll. Fjernet fra git, riktig sti lagt til `.gitignore`.
+
+**Neste steg:** alt gjenstående krever PO. Se gjeldsloggen (punkt 13): ekte tekst på faste sider, lokal verifisering av ekte API-tilkobling, gamle URL-er fra eRedaktør, og hosting via Render.
 
 ## 11. Kodestruktur og prinsipper for fleksibilitet (Sprint 3a)
 - `lib/innhold/lager.js`: eneste vei til lagret innhold (`listSider`, `hentSide`, `lagreSide`). Filbasert i dag (`innhold/sider/<slug>.json`). **Kan byttes mot en database uten at resten endres.**

@@ -31,7 +31,7 @@ npm start
 Endepunktet krever ingen nøkkel/innlogging, filtrerer offentlig/internt server-side
 (kun offentlige arrangementer sendes ut), og har 5 minutters caching (`Cache-Control`).
 Merk: dette er en dev-sandbox på Cloud Run og kan få en «kald start» (litt treg første
-respons) etter lang inaktivitet – appens cache-i-fil-fallback (`data/siste-vellykkede.json`)
+respons) etter lang inaktivitet – appens cache-i-fil-fallback (`innhold/cache/siste-vellykkede.json`)
 tar seg av dette hvis kallet skulle feile eller time ut.
 
 | Variabel | Standard | Betydning |
