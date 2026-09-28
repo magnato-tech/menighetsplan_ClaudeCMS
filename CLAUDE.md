@@ -1,6 +1,6 @@
 # Prosjektdokument: Menighets-CMS
 
-*Sist oppdatert: 2026-09-28, etter Sprint 3b. Neste: ikke planlagt (se punkt 9).*
+*Sist oppdatert: 2026-09-28/29 (natt, autonom økt), etter Sprint 7 + kvalitetsgjennomgang (punkt 15). Neste: se punkt 10. PO ser over og committer selv neste morgen.*
 
 > **Ny økt? Start her:** Les dette dokumentet, så punkt 9–14. Kjør neste sprint i punkt 10 uten å spørre om lov på forhånd, og rapporter til PO etterpå. Oppdater punkt 9 og 10 når sprinten er ferdig.
 
@@ -99,10 +99,37 @@ Et enkelt, vedlikeholdsfritt CMS (offentlig nettside) for Lillesand Misjonskirke
 - Moduler: `lib/admin/` (auth.js, validering.js, index.js), `lib/visning/admin.js`. `lib/innhold/lager.js` fikk `slettSide(slug)`, og fyller inn `modellVersjon: 1` / blokk-`id` for eldre sider ved lesing. De tre eksempelsidene er oppdatert med disse feltene.
 - Verifisert av Claude: `node --test` (42/42 grønt) og hele curl-flyten (401 uten auth, 200 med, opprett→303, vis offentlig→200, slett→303, deretter 404).
 
-**Senere (ikke planlagt):** koble til ekte data, eget GitHub-repo, hosting, overgang fra eRedaktør med videresending av gamle lenker.
+**Sprint 4** ✅ Mer automatisk og relevant forside (58 tester grønne):
+- Filter «Alle arrangementer / Kun gudstjenester» (`?visning=`), gjenopprettet og koblet opp (var falt ut i modulariseringen i 3a, CSS lå klar men ubrukt).
+- Ny seksjon «Denne uken» øverst: arrangementer neste 7 dager, kronologisk.
+- Kategori-tagger fra Menighetsplan (`tagger`-feltet, f.eks. «Familie», «Type: Konsert») vises nå på arrangementsrader — mer av dataene fra kilden brukes automatisk, uten dobbel «Gudstjeneste»-tag.
+- Ny fil `lib/visning/relevans.js` med rene, testbare funksjoner for filtrering/uke-uttrekk.
+- Verifisert av Claude: `node --test` (58/58) og curl (filter ekskluderer riktig, tags vises i HTML).
+
+**Sprint 5** ✅ Lokale overstyringer for arrangementer (74 tester grønne):
+- Nytt lager `lib/innhold/overstyringer.js` → `innhold/arrangement-overstyringer.json`, keyet på Menighetsplan sin `uid`. Helt uavhengig av og skriver aldri til Menighetsplan.
+- `/admin/arrangementer`: liste over kommende arrangementer med «Fremhev»/«Skjul»-knapper per rad. Lenke fra `/admin`.
+- Offentlig forside: skjulte arrangementer vises ingen steder (verken Fremhevet, Denne uken eller månedsliste), fremhevede får egen seksjon øverst.
+- Verifisert av Claude: `node --test` (74/74) og curl-flyt (401→200 med auth, fremhev→vises i Fremhevet, skjul→forsvinner helt). NB: agenten glemte å nullstille testdataene sine i `arrangement-overstyringer.json` etter egen verifisering — Claude nullstilte filen til `{}` før og etter sin egen verifisering, slik at PO møter en ren tilstand.
+
+**Om PO-oppdraget «hent mest mulig data automatisk, moderne admin»:** Sprint 4 dekket automatikk-delen, Sprint 5 dekket kjernen i «styre hva som legges ut» (fremhev/skjul). Det uavklarte spørsmålet i punkt 6 (ekte tilgang til Menighetsplan, Firestore åpen for alle) er IKKE rørt — krever fortsatt et valg fra PO. Sprint 6 tar fatt på resten av «moderne admin»: samlet dashboard og bedre tilbakemelding i admin-grensesnittet.
+
+**Sprint 6** ✅ Admin-dashboard og tilbakemelding (84 tester grønne):
+- `/admin` er nå et dashboard via `renderDashboard()` (brukte tidligere rå inline-HTML, ikke `layout()` — rettet). Viser tilkoblingsstatus mot Menighetsplan (sist hentet/feil), antall sider, antall kommende arrangementer, og en «Hent nå»-knapp (`POST /admin/hent-na`).
+- Grønne suksessbannere (`.suksess`-klasse i `felles.js`) etter opprett/rediger/slett side og fremhev/skjul arrangement, via `?utfort=...`.
+- Verifisert av Claude: `node --test` (84/84), curl mot dashboard/hent-na/suksessbanner, offentlig forside uendret (200). Ingen testdata latt igjen (sjekket `arrangement-overstyringer.json` er `{}` og `innhold/sider/` har kun de tre ekte sidene).
+
+**Kvalitetsgjennomgang (djevelens advokat), samme kveld:** Claude kjørte en selvstendig kodegjennomgang (8 vinkler: linje-for-linje, fjernet oppførsel, kryssfil-sporing, reuse/simplification/efficiency, altitude/conventions) av alt som ble bygget i Sprint 4–6, siden mye ble skrevet av flere Haiku-agenter på rad uten menneskelig blikk innimellom. Se punkt 15 for resultat.
+
+**Sprint 7** ✅ Automatisk opprydding og avlyst-status (88 tester grønne):
+- `lib/innhold/overstyringer.js` fikk `ryddOpp(gyldigeUider)`: fjerner overstyringer for arrangementer som ikke lenger finnes hos Menighetsplan (f.eks. slettet der), så fila ikke vokser med utdaterte valg over tid. Kjøres automatisk hver gang `/admin/arrangementer` lastes.
+- Admin-oversikten over arrangementer viser nå «Avlyst»-status (samme røde tag som på den offentlige forsiden), slik at PO ser det direkte når hen skal vurdere fremhev/skjul.
+- Verifisert av Claude: `node --test` (88/88), og curl med en simulert utdatert overstyring (bekreftet fjernet ved neste sideinnlasting, gyldig overstyring beholdt).
+
+**Senere (ikke planlagt):** koble til ekte data (avhenger av PO-valg i punkt 6), eget GitHub-repo (avhenger av at `gh` installeres), hosting, overgang fra eRedaktør med videresending av gamle lenker.
 
 ## 10. Neste sprint
-Ikke planlagt ennå. Kandidater fra gjeldsloggen (punkt 13): ekte sidetekster inn via admin, eller avklare datakilde-spørsmålet i punkt 6 med PO. Avklares med PO før neste økt.
+Ikke planlagt. Naturlige kandidater fra gjeldslisten (punkt 13): PO legger inn ekte tekst på de faste sidene via admin, eller PO tar stilling til det uavklarte datakilde-spørsmålet i punkt 6. Claude fortsetter autonomt videre denne natten så lenge det finnes klart avgrenset, verifiserbart arbeid igjen — se punkt 15 for full logg over kveldens økt.
 
 ## 11. Kodestruktur og prinsipper for fleksibilitet (Sprint 3a)
 - `lib/innhold/lager.js`: eneste vei til lagret innhold (`listSider`, `hentSide`, `lagreSide`). Filbasert i dag (`innhold/sider/<slug>.json`). **Kan byttes mot en database uten at resten endres.**
@@ -128,8 +155,30 @@ Ikke planlagt ennå. Kandidater fra gjeldsloggen (punkt 13): ekte sidetekster in
 | Fillagring uten låsing og historikk | Én redaktør på localhost | Database eller ferdig CMS |
 | Admin med HTTP Basic Auth (Sprint 3b) | Sikkerhet er ikke viktig nå (PO) | Ekte innlogging og roller |
 | Den ekte appdatabasen er åpen for alle | Utenfor CMS-et, satt på vent av PO | Lukkes før nettsiden settes i drift |
+| `innhold/arrangement-overstyringer.json` uten låsing/historikk (Sprint 5) | Samme klasse snarvei som sidelageret over — én redaktør på localhost | Database eller ferdig CMS, samtidig med sidelageret |
+| Fremhevet arrangement forsvinner helt hvis det ikke matcher `?visning=`-filteret (Sprint 5, se punkt 15) | Ikke definert hva som er «riktig» oppførsel ennå | PO avgjør: skal fremhevet overstyre filteret? |
 
 ## 14. Praktisk (Windows-maskinen til PO)
 - Start: `node server.js` (port 3000). Tester: `node --test`.
 - Browser-panelets `preview_start` med launch.json **feiler** på denne maskinen («'C:\Program' is not recognized»). Start i stedet serveren i bakgrunnen med PowerShell (`Set-Location "<mappe>"; node server.js`) og åpne `http://localhost:3000` i panelet. Stopp serveren når du er ferdig.
-- `git` i disse mappene treffer et repo i hjemmemappen til brukeren. Ikke kjør git-kommandoer her før CMS-et har fått sitt eget repo.
+- CMS-mappen har nå sitt eget lokale git-repo (opprettet i Sprint 3b), separat fra repoet i hjemmemappen til brukeren. `git`-kommandoer her er trygge. Ikke koblet til GitHub ennå (`gh` mangler på maskinen) — se punkt 2.
+
+## 15. Kvalitetsgjennomgang, natt til 2026-09-28/29 (etter Sprint 4–6)
+PO ba Claude fortsette selvstendig i flere sprinter samme kveld («jobb i sprinter, test, planlegg og fortsett selvstendig til du går tom for tokens»), som et bevisst, eksplisitt unntak fra regelen i punkt 7 om én ny økt per sprint — gjort for å bruke kvelden effektivt mens PO var borte. Etter Sprint 4–6 kjørte Claude selv (ikke en agent) en 8-vinklers kodegjennomgang av alt som var bygget, siden mye var skrevet av flere Haiku-agenter på rad uten menneskelig blikk innimellom. Fem funnere kjørte parallelt; flere fant de samme problemene uavhengig av hverandre, som styrket tilliten til funnene.
+
+**Rettet av Claude samme kveld (verifisert med `node --test` og i nettleserpanelet etterpå):**
+- «Avbryt»-knappene i rediger-/slett-side-skjemaene pekte til `/admin` (dashboardet, innført i Sprint 6) i stedet for `/admin/sider` (sidelisten brukeren faktisk kom fra) — rettet i `lib/visning/admin.js`.
+- `uid` (fra Menighetsplan) ble limt inn i `action`-attributter i `renderArrangementerPage` uten `esc()`, i motsetning til alle andre felt i samme fil — latent XSS-hull i admin hvis en fremtidig uid noensinne inneholder anførselstegn. Rettet.
+- Dashboardets tall for «kommende arrangementer» talte alle forekomster fra Menighetsplan, uten å trekke fra skjulte — avvek fra det som faktisk vises offentlig. Rettet til å bruke samme `anvendOverstyringer`-logikk som forsiden.
+- Dødt «tenke-høyt»-kommentarblokk i `lib/admin/index.js` (beskrev et problem koden rett under allerede løste) — fjernet.
+- `365 * 86400000` («ett år fram») duplisert to steder — samlet i én konstant `ETT_AAR_MS`.
+- `lib/innhold/overstyringer.js`: fremhev/skjul leste fila fra disk to ganger per klikk (én gang i `hentForUid`, én gang til inne i `settOverstyring`) — ny funksjon `toggleFelt(uid, felt)` gjør det med én lesing og én skriving.
+- Datoformatering i arrangement-admin brukte `toLocaleString` direkte i stedet for `fmtDate`/`fmtTime` fra `felles.js` som resten av admin bruker — rettet for konsekvent format.
+- `.claude/scheduled_tasks.lock` (en sesjons-/prosess-låsefil, samme kategori som `data/siste-vellykkede.ics`) lagt til i `.gitignore`.
+- Denne gjeldsloggen (punkt 13) manglet `overstyringer.js`-lageret — lagt til.
+
+**Ikke rettet, bevisst latt stå til PO/neste sprint (nå i gjeldsloggen, punkt 13):**
+- Samtidighets-race i `overstyringer.json` (to samtidige admin-requests kan i teorien overskrive hverandres endring) — akseptert risiko for én redaktør på localhost, samme vurdering som gjelder sidelageret.
+- Skjør `uid`-regex (`^[a-z0-9-]+$`) som fungerer for mock-data, men er en antagelse som kan briste når ekte Menighetsplan-data kobles til (uavklart, punkt 6).
+- Om et fremhevet arrangement skal overstyre `?visning=`-filteret (vises uansett) er ikke bestemt — i dag forsvinner det fra «Fremhevet» hvis filteret ikke matcher. Krever et PO-valg, ikke en teknisk fiks.
+- Regelen om én ny økt per sprint (punkt 7) ble bevisst satt til side denne kvelden etter eksplisitt PO-instruks — nevnt her for åpenhet, ikke noe å «rette».

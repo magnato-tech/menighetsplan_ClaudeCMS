@@ -9,6 +9,7 @@ import os from 'node:os';
 import { lagOpprettLager } from '../lib/innhold/lager.js';
 import { validateSkjema, validerNySlug } from '../lib/admin/validering.js';
 import { sjekKAuth } from '../lib/admin/auth.js';
+import { renderDashboard, renderSidelistePage, renderArrangementerPage } from '../lib/visning/admin.js';
 
 describe('Admin', () => {
   let tmpDir;
@@ -178,5 +179,109 @@ describe('Admin', () => {
 
   test('cleanup – slett midlertidig mappe', async () => {
     await rm(tmpDir, { recursive: true, force: true });
+  });
+});
+
+describe('Admin rendering', () => {
+  test('renderDashboard – viser Menighetsplan-status', () => {
+    const state = {
+      tekst: 'mock',
+      fetchedAt: new Date('2026-09-28T10:30:00Z'),
+      error: null,
+      fromCache: false
+    };
+    const sider = [
+      { slug: 'om-oss', tittel: 'Om oss', meny: { vis: true } }
+    ];
+    const html = renderDashboard(state, sider, 5, null);
+
+    assert.ok(html.includes('Status'), 'Skal ha Status-avsnitt');
+    assert.ok(html.includes('Menighetsplan-tilkobling'), 'Skal nevne Menighetsplan');
+    assert.ok(html.includes('Administrer sider'), 'Skal ha lenke til sideliste');
+    assert.ok(html.includes('Administrer arrangementer'), 'Skal ha lenke til arrangementer');
+    assert.ok(html.includes('Hent nå'), 'Skal ha "Hent nå"-knapp');
+  });
+
+  test('renderDashboard – viser nøkkeltall', () => {
+    const state = { fetchedAt: new Date(), error: null, fromCache: false };
+    const sider = [
+      { slug: 'side1', tittel: 'Side 1', meny: { vis: true } },
+      { slug: 'side2', tittel: 'Side 2', meny: { vis: true } }
+    ];
+    const html = renderDashboard(state, sider, 10, null);
+
+    assert.ok(html.includes('2'), 'Skal vise 2 faste sider');
+    assert.ok(html.includes('10'), 'Skal vise 10 arrangementer');
+  });
+
+  test('renderDashboard – viser suksess-banner når utfort=hentet', () => {
+    const state = { fetchedAt: new Date(), error: null, fromCache: false };
+    const sider = [];
+    const html = renderDashboard(state, sider, 0, 'hentet');
+
+    assert.ok(html.includes('suksess'), 'Skal inneholde suksess-klasse');
+    assert.ok(html.includes('Arrangementer oppdatert'), 'Skal vise oppdaterings-melding');
+  });
+
+  test('renderDashboard – viser error-melding hvis state.error er satt', () => {
+    const state = {
+      fetchedAt: new Date('2026-09-27T10:00:00Z'),
+      error: 'fikk ikke kontakt med kilden',
+      fromCache: true
+    };
+    const sider = [];
+    const html = renderDashboard(state, sider, 0, null);
+
+    assert.ok(html.includes('warn'), 'Skal inneholde warn-klasse');
+    assert.ok(html.includes('fikk ikke kontakt'), 'Skal vise feilmeldingen');
+  });
+
+  test('renderSidelistePage – viser suksess-banner når utfort=opprettet', () => {
+    const sider = [];
+    const html = renderSidelistePage(sider, 'opprettet');
+
+    assert.ok(html.includes('suksess'), 'Skal inneholde suksess-klasse');
+    assert.ok(html.includes('opprettet'), 'Skal nevne opprettet');
+  });
+
+  test('renderSidelistePage – viser suksess-banner når utfort=oppdatert', () => {
+    const sider = [];
+    const html = renderSidelistePage(sider, 'oppdatert');
+
+    assert.ok(html.includes('suksess'), 'Skal inneholde suksess-klasse');
+    assert.ok(html.includes('oppdatert'), 'Skal nevne oppdatert');
+  });
+
+  test('renderSidelistePage – viser suksess-banner når utfort=slettet', () => {
+    const sider = [];
+    const html = renderSidelistePage(sider, 'slettet');
+
+    assert.ok(html.includes('suksess'), 'Skal inneholde suksess-klasse');
+    assert.ok(html.includes('slettet'), 'Skal nevne slettet');
+  });
+
+  test('renderSidelistePage – ingen banner når utfort=null', () => {
+    const sider = [];
+    const html = renderSidelistePage(sider, null);
+
+    // Sjekk at det ikke er en suksess-banner (men det er en vanlig side)
+    const bannerCount = (html.match(/class="suksess"/g) || []).length;
+    assert.equal(bannerCount, 0, 'Skal ikke ha suksess-banner');
+  });
+
+  test('renderArrangementerPage – viser suksess-banner når utfort=fremhevet', () => {
+    const forekomster = [];
+    const html = renderArrangementerPage(forekomster, {}, 'fremhevet');
+
+    assert.ok(html.includes('suksess'), 'Skal inneholde suksess-klasse');
+    assert.ok(html.includes('fremhevet'), 'Skal nevne fremhevet');
+  });
+
+  test('renderArrangementerPage – viser suksess-banner når utfort=skjult', () => {
+    const forekomster = [];
+    const html = renderArrangementerPage(forekomster, {}, 'skjult');
+
+    assert.ok(html.includes('suksess'), 'Skal inneholde suksess-klasse');
+    assert.ok(html.includes('skjult'), 'Skal nevne skjult');
   });
 });

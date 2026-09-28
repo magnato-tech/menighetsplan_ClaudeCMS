@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { lagOpprettArrangementer } from './lib/arrangementer.js';
 import { lagOpprettLager } from './lib/innhold/lager.js';
+import { lagOpprettOverstyringer } from './lib/innhold/overstyringer.js';
 import { renderForside } from './lib/visning/forside.js';
 import { renderSide } from './lib/visning/side.js';
 import { renderDebug } from './lib/visning/debug.js';
@@ -20,6 +21,7 @@ const ADMIN_PASSORD = process.env.ADMIN_PASSORD || 'admin';
 // Initialisering
 const arrangementer = lagOpprettArrangementer(ROOT, KILDE_URL);
 const lager = lagOpprettLager(path.join(ROOT, 'innhold'));
+const overstyringer = lagOpprettOverstyringer(path.join(ROOT, 'innhold'));
 
 // ---------- Server ----------
 
@@ -54,7 +56,9 @@ const server = http.createServer(async (req, res) => {
       const to = now + 120 * 86400000;
       const data = arrangementer.hentData(now, to);
       const menySider = await lager.listSider();
-      const html = renderForside({ forekomster: data.forekomster, state: arrangementer.state, adapter: arrangementer.adapter }, menySider);
+      const visning = url.searchParams.get('visning') || 'alle';
+      const alle = await overstyringer.hentAlle();
+      const html = renderForside({ forekomster: data.forekomster, state: arrangementer.state, adapter: arrangementer.adapter }, menySider, visning, alle);
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       return res.end(html);
     }
@@ -72,7 +76,7 @@ const server = http.createServer(async (req, res) => {
 
     // Admin-ruter
     if (url.pathname.startsWith('/admin')) {
-      return handleAdmin(req, res, url, lager, ADMIN_PASSORD);
+      return handleAdmin(req, res, url, lager, overstyringer, arrangementer, ADMIN_PASSORD);
     }
 
     // Faste sider
