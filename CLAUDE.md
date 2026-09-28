@@ -1,6 +1,6 @@
 # Prosjektdokument: Menighets-CMS
 
-*Sist oppdatert: 2026-09-28, etter at PO avklarte hovedspørsmålet i punkt 6 (ekte datatilkobling) sammen med GAIS. Neste: se punkt 10.*
+*Sist oppdatert: 2026-09-28, etter Sprint 8 (Claude tok over som prosjektleder igjen etter at GAIS avsluttet sitt arbeid). Neste: se punkt 10.*
 
 > **Ny økt? Start her:** Les dette dokumentet, så punkt 9–14. Kjør neste sprint i punkt 10 uten å spørre om lov på forhånd, og rapporter til PO etterpå. Oppdater punkt 9 og 10 når sprinten er ferdig.
 
@@ -130,11 +130,17 @@ Et enkelt, vedlikeholdsfritt CMS (offentlig nettside) for Lillesand Misjonskirke
 **Senere (ikke planlagt):** koble til ekte data (avhenger av PO-valg i punkt 6), eget GitHub-repo (avhenger av at `gh` installeres), hosting, overgang fra eRedaktør med videresending av gamle lenker.
 
 ## 10. Neste sprint
-**Ekte API-tilkobling landet 2026-09-28.** GAIS bekreftet at API-et kjører på Cloud Run (URL i punkt 14) og delte et ekte eksempelsvar. Claude sammenlignet det mot kontrakten i `lib/kilder/menighetsplan.js` og fant ett avvik: ekte `tagger` er en liste med rene strenger (`["gudstjeneste"]`), mens koden fra Sprint 4 forventet objekter (`{ verdi }`, som i mock-dataene) — det ga tomme kategori-tagger og ville laget en duplikat "Gudstjeneste"-tag. Rettet i `lib/kilder/menighetsplan.js` (støtter nå begge former, og filtrerer bort den rå "gudstjeneste"-taggen når `erGudstjeneste` allerede er satt), med ny test i `test/kilder.test.js` som bruker GAIS sitt ekte eksempelsvar direkte. `node --test`: 89/89 grønt.
+**Ekte API-tilkobling landet 2026-09-28.** GAIS bekreftet at API-et kjører på Cloud Run (URL i punkt 14) og delte et ekte eksempelsvar. Claude sammenlignet det mot kontrakten i `lib/kilder/menighetsplan.js` og fant ett avvik: ekte `tagger` er en liste med rene strenger (`["gudstjeneste"]`), mens koden fra Sprint 4 forventet objekter (`{ verdi }`, som i mock-dataene) — det ga tomme kategori-tagger og ville laget en duplikat "Gudstjeneste"-tag. Rettet i `lib/kilder/menighetsplan.js` (støtter nå begge former, og filtrerer bort den rå "gudstjeneste"-taggen når `erGudstjeneste` allerede er satt), med ny test i `test/kilder.test.js` som bruker GAIS sitt ekte eksempelsvar direkte.
 
-**Ikke verifisert av Claude:** faktisk nettverkskall mot Cloud Run-URL-en — denne økten sin sandkasse blokkerer utgående kall dit (proxy svarer 403, policy-avgjørelse, ikke appens feil). PO må selv sette `MENIGHETSPLAN_API_URL` (se README) og bekrefte at ekte arrangementer vises riktig på `http://localhost:3000` før dette regnes som fullt verifisert.
+**Ikke verifisert av Claude:** faktisk nettverkskall mot Cloud Run-URL-en — sandkassen Claude kjører i blokkerer utgående kall dit (proxy svarer 403, policy-avgjørelse, ikke appens feil). PO må selv sette `MENIGHETSPLAN_API_URL` (se README) og bekrefte at ekte arrangementer vises riktig på `http://localhost:3000` før dette regnes som fullt verifisert.
 
-**Neste steg:** PO tester ekte tilkobling lokalt. Uavhengig av dette: PO kan når som helst legge inn ekte tekst på de faste sidene via admin (gjeldslogg, punkt 13).
+**Sprint 8** ✅ Etter at GAIS avsluttet sitt arbeid (bekreftet via GitHub: `master` uendret siden Claude sin forrige commit, ingen force push skjedde), tok Claude over som prosjektleder igjen og kjørte tre parallelle Haiku-agenter (100/100 tester grønne):
+- **Defensiv `isPublic`-sjekk** i `lib/kilder/menighetsplan.js`: selv om API-et allerede filtrerer server-side, hopper adapteren nå uansett over rader med eksplisitt `isPublic: false` (belte-og-bukseseler).
+- **Fremhevet overstyrer visningsfilter** (PO-avgjørelse, se gjeldsloggen): `lib/visning/forside.js` bygger nå Fremhevet-seksjonen fra den ufiltrerte (kun skjult-fjernede) listen, mens «Denne uken» og månedslisten fortsatt respekterer `?visning=`-filteret som før.
+- **Omdirigeringsmekanisme** for gamle eRedaktør-lenker: ny modul `lib/innhold/omdirigeringer.js` + tom tabell `innhold/omdirigeringer.json` (`{}`, klar for PO å fylle inn), koblet inn i `server.js` rett før 404-håndtering (301-redirect ved treff).
+- Claude fant og rettet selv en feil i én av agentenes tester (brukte `require()` i en ESM-fil) før commit — verifisert med `node --test` (100/100) og egen curl-smoketest av server.
+
+**Neste steg:** PO tester ekte API-tilkobling lokalt. Uavhengig av dette: PO kan når som helst legge inn ekte tekst på de faste sidene via admin, eller begynne å fylle inn `innhold/omdirigeringer.json` med kjente gamle URL-er fra eRedaktør (gjeldslogg, punkt 13).
 
 ## 11. Kodestruktur og prinsipper for fleksibilitet (Sprint 3a)
 - `lib/innhold/lager.js`: eneste vei til lagret innhold (`listSider`, `hentSide`, `lagreSide`). Filbasert i dag (`innhold/sider/<slug>.json`). **Kan byttes mot en database uten at resten endres.**
@@ -160,10 +166,11 @@ Et enkelt, vedlikeholdsfritt CMS (offentlig nettside) for Lillesand Misjonskirke
 | Fillagring uten låsing og historikk | Én redaktør på localhost | Database eller ferdig CMS |
 | Admin med HTTP Basic Auth (Sprint 3b) | Sikkerhet er ikke viktig nå (PO) | Ekte innlogging og roller |
 | Den ekte appdatabasen (Firestore) sine egne regler er fortsatt åpne | Ikke lenger CMS-ets direkte problem siden vi går via API-et (punkt 6), men fortsatt en risiko for appen selv | Appens/GAIS sitt ansvar å lukke før produksjon |
-| GAIS har pushrettigheter til CMS-repoet (2026-09-28) | Ble gitt for et Firestore-scenario som ikke lenger er aktuelt (punkt 2) — trolig unødvendig nå som integrasjonen kun er én miljøvariabel | Vurder å fjerne tilgangen igjen, eller la den stå til PO sier fra |
+| GAIS har pushrettigheter til CMS-repoet (siden 2026-09-28) | GAIS avsluttet sitt arbeid 2026-09-28 (bekreftet: ingen force push skjedde, `master` uendret siden Claudes commit) — tilgangen står fortsatt, trolig unødvendig nå | PO vurderer å fjerne GitHub-tilgangen for GAIS |
 | API-et kjører på en dev-sandbox (Cloud Run), kan ha kald start / gå i dvale | Under aktiv utvikling, GAIS har bekreftet fallback til cache/mock dekker dette | Fast produksjons-URL når `lillesandmisjonskirke.no` settes i drift |
 | `innhold/arrangement-overstyringer.json` uten låsing/historikk (Sprint 5) | Samme klasse snarvei som sidelageret over — én redaktør på localhost | Database eller ferdig CMS, samtidig med sidelageret |
-| Fremhevet arrangement forsvinner helt hvis det ikke matcher `?visning=`-filteret (Sprint 5, se punkt 15) | Ikke definert hva som er «riktig» oppførsel ennå | PO avgjør: skal fremhevet overstyre filteret? |
+| `innhold/omdirigeringer.json` er en tom tabell (Sprint 8) | De gamle eRedaktør-URL-ene er ikke kjent ennå | PO fyller inn `{ "/gammel-sti": "/ny-sti" }`-par når de er kjent |
+| Filbasert lagring generelt kjører ikke trygt på f.eks. Cloud Run (ephemeral filsystem) | Ikke aktuelt før hosting velges | Se svar om skyhosting: velg løsning med persistent lagring (VM eller PaaS med volum), eller bytt lagringslag |
 
 ## 14. Praktisk (Windows-maskinen til PO)
 - Start: `node server.js` (port 3000). Tester: `node --test`.

@@ -8,6 +8,7 @@ import path from 'node:path';
 import { lagOpprettArrangementer } from './lib/arrangementer.js';
 import { lagOpprettLager } from './lib/innhold/lager.js';
 import { lagOpprettOverstyringer } from './lib/innhold/overstyringer.js';
+import { lagOpprettOmdirigeringer } from './lib/innhold/omdirigeringer.js';
 import { renderForside } from './lib/visning/forside.js';
 import { renderSide } from './lib/visning/side.js';
 import { renderDebug } from './lib/visning/debug.js';
@@ -22,6 +23,7 @@ const ADMIN_PASSORD = process.env.ADMIN_PASSORD || 'admin';
 const arrangementer = lagOpprettArrangementer(ROOT, KILDE_URL);
 const lager = lagOpprettLager(path.join(ROOT, 'innhold'));
 const overstyringer = lagOpprettOverstyringer(path.join(ROOT, 'innhold'));
+const omdirigeringer = lagOpprettOmdirigeringer(path.join(ROOT, 'innhold'));
 
 // ---------- Server ----------
 
@@ -89,6 +91,14 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         return res.end(html);
       }
+    }
+
+    // Omdirigeringer (gamle URL-er → nye)
+    const omdirigMap = await omdirigeringer.hentOmdirigeringer();
+    const omdirigerTil = omdirigMap[url.pathname];
+    if (omdirigerTil) {
+      res.writeHead(301, { 'Location': omdirigerTil });
+      return res.end();
     }
 
     // 404

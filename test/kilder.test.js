@@ -59,3 +59,15 @@ test('Menighetsplan-API: tåler manglende valgfrie felt og hopper over ugyldige 
   assert.equal(r.forekomster.length, 1);
   assert.equal(r.forekomster[0].location, '');
 });
+
+test('Menighetsplan-API: defensiv sjekk – ekskluderer eksplisitt isPublic: false', () => {
+  const r = mp.tolk(JSON.stringify({ versjon: 1, arrangementer: [
+    { id: 'public', type: 'arrangement', tittel: 'Offentlig', start: '2026-10-01T18:00:00+02:00', status: 'planlagt' },
+    { id: 'private', type: 'arrangement', tittel: 'Privat', start: '2026-10-02T18:00:00+02:00', status: 'planlagt', isPublic: false },
+    { id: 'no-field', type: 'arrangement', tittel: 'Uten felt', start: '2026-10-03T18:00:00+02:00', status: 'planlagt' },
+  ] }), FRA, TIL);
+  assert.equal(r.antall, 3); // alle tre i originaldata
+  assert.equal(r.forekomster.length, 2); // bare to i resultat
+  assert.equal(r.forekomster[0].uid, 'public');
+  assert.equal(r.forekomster[1].uid, 'no-field');
+});

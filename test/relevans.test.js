@@ -2,7 +2,7 @@
 
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { filtrerForekomster, hentDenneUken, hentKategorierForVising } from '../lib/visning/relevans.js';
+import { filtrerForekomster, hentDenneUken, hentKategorierForVising, anvendOverstyringer } from '../lib/visning/relevans.js';
 
 describe('Filtrering og relevans', () => {
   const baseEvent = (overrides = {}) => ({
@@ -159,6 +159,102 @@ describe('Filtrering og relevans', () => {
       const event = baseEvent({ categories: 'ikke-array' });
       const kategorier = hentKategorierForVising(event);
       assert.deepEqual(kategorier, []);
+    });
+  });
+
+  describe('Fremhevet arrangementer og visningsfilter', () => {
+    test('fremhevet arrangement som IKKE er gudstjeneste vises i Fremhevet selv når visning=gudstjenester', () => {
+      const now = Date.now();
+      const events = [
+        baseEvent({
+          uid: 'konsert-1',
+          summary: 'Konsert',
+          erGudstjeneste: false,
+          startUtc: now + 100000
+        }),
+        baseEvent({
+          uid: 'gudstjeneste-1',
+          summary: 'Gudstjeneste',
+          erGudstjeneste: true,
+          startUtc: now + 200000
+        }),
+      ];
+      const overstyringer = {
+        'konsert-1': { fremhevet: true, skjult: false },
+      };
+
+      // Hent fremhevede fra ufiltrert liste (som Fremhevet-seksjonen gjør)
+      const { fremhevede: fremhevetUfiltrert } = anvendOverstyringer(events, overstyringer);
+
+      // Filtrer deretter på visning (som resten av siden gjør)
+      const filtered = filtrerForekomster(events, 'gudstjenester');
+      const { fremhevede: fremhevetFiltrert, resten } = anvendOverstyringer(filtered, overstyringer);
+
+      // Fremhevet skal ha konserten (ufiltrert)
+      assert.equal(fremhevetUfiltrert.length, 1);
+      assert.equal(fremhevetUfiltrert[0].uid, 'konsert-1');
+
+      // Resten skal IKKE ha konserten (fordi den er filtrert bort)
+      assert.equal(fremhevetFiltrert.length, 0);
+      assert.equal(resten.length, 1);
+      assert.equal(resten[0].uid, 'gudstjeneste-1');
+    });
+
+    test('skjult arrangement skal aldri vises, uavhengig av fremhevet-status eller visningsfilter', () => {
+      const now = Date.now();
+      const events = [
+        baseEvent({
+          uid: 'skjult-arrangement',
+          summary: 'Konsert (skjult)',
+          erGudstjeneste: false,
+          startUtc: now + 100000
+        }),
+      ];
+      const overstyringer = {
+        'skjult-arrangement': { fremhevet: true, skjult: true },
+      };
+
+      // Hent fra ufiltrert liste
+      const { fremhevede: fremhevetUfiltrert } = anvendOverstyringer(events, overstyringer);
+
+      // Hent fra filtrert liste
+      const filtered = filtrerForekomster(events, 'alle');
+      const { fremhevede: fremhevetFiltrert, resten } = anvendOverstyringer(filtered, overstyringer);
+
+      // Skal aldri vises noe sted
+      assert.equal(fremhevetUfiltrert.length, 0);
+      assert.equal(fremhevetFiltrert.length, 0);
+      assert.equal(resten.length, 0);
+    });
+
+    test('gudstjeneste som er fremhevet vises både i Fremhevet og i resten når visning=gudstjenester', () => {
+      const now = Date.now();
+      const events = [
+        baseEvent({
+          uid: 'gudstjeneste-fremhevet',
+          summary: 'Gudstjeneste (fremhevet)',
+          erGudstjeneste: true,
+          startUtc: now + 100000
+        }),
+      ];
+      const overstyringer = {
+        'gudstjeneste-fremhevet': { fremhevet: true, skjult: false },
+      };
+
+      // Hent fra ufiltrert liste
+      const { fremhevede: fremhevetUfiltrert } = anvendOverstyringer(events, overstyringer);
+
+      // Hent fra filtrert liste
+      const filtered = filtrerForekomster(events, 'gudstjenester');
+      const { fremhevede: fremhevetFiltrert, resten } = anvendOverstyringer(filtered, overstyringer);
+
+      // Skal vises i Fremhevet (ufiltrert)
+      assert.equal(fremhevetUfiltrert.length, 1);
+      assert.equal(fremhevetUfiltrert[0].uid, 'gudstjeneste-fremhevet');
+
+      // Skal også vises i resten (filtrert, fordi den er en gudstjeneste)
+      assert.equal(fremhevetFiltrert.length, 1);
+      assert.equal(resten.length, 0);
     });
   });
 });
