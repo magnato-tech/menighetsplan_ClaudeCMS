@@ -147,7 +147,10 @@ Et enkelt, vedlikeholdsfritt CMS (offentlig nettside) for Lillesand Misjonskirke
 - `lib/visning/forside.js` kalte `anvendOverstyringer()` to ganger på identisk data (for å hente hhv. `fremhevede` og `resten`/`allNotHidden`) — slått sammen til ett kall.
 - **Bifunn, ikke fra code-review:** `.gitignore` hadde feil filnavn for cache-filen (`data/siste-vellykkede.ics`, en `.ics`-rest fra før prosjektet gikk over til JSON-kontrakten) — selve `.json`-cachefilen har dermed ligget **committet i git siden Sprint 3b**. Ikke sensitivt (kun offentlig arrangementsdata), men unødvendig i versjonskontroll. Fjernet fra git, riktig sti lagt til `.gitignore`.
 
-**Neste steg:** alt gjenstående krever PO. Se gjeldsloggen (punkt 13): ekte tekst på faste sider, lokal verifisering av ekte API-tilkobling, gamle URL-er fra eRedaktør, og hosting via Render.
+**Sprint 11** ✅ PO skal bruke admin fra iPhone (via Render, se punkt 14) — Claude testet derfor mobilvisning (390px bredde) med Playwright/Chromium mot alle offentlige og admin-sider. Fant ett reelt layoutbrudd: `/admin/arrangementer` hadde horisontal overflow (579px innhold på 390px skjerm, tabellen presset resten av siden bredere enn skjermen). Årsak: `<table style="width:100%">` respekterer ikke containerbredden når celleinnhold (to knapper side ved side) trenger mer plass — nettlesere bruker `table-layout:auto` som standard. Fikset ved å pakke begge admin-tabellene (`renderSidelistePage`, `renderArrangementerPage` i `lib/visning/admin.js`) i en `overflow-x:auto`-wrapper, så bare tabellen (ikke hele siden) blir scrollbar sidelengs. Verifisert: `node --test` (100/100), egen overflow-sjekk med Playwright (ingen overflow igjen på noen side), og bekreftet at Fremhev/Skjul-knappene faktisk er nåbare ved å scrolle i tabellen.
+- **Ikke helt polert:** å måtte scrolle sidelengs *inni* en tabell for å nå knappene er ikke ideell mobil-UX (lagt i gjeldsloggen, punkt 13) — men siden er ikke lenger ødelagt, som var hovedproblemet.
+
+**Neste steg:** alt annet gjenstående krever PO. Se gjeldsloggen (punkt 13): ekte tekst på faste sider, lokal verifisering av ekte API-tilkobling, gamle URL-er fra eRedaktør, og hosting via Render.
 
 ## 11. Kodestruktur og prinsipper for fleksibilitet (Sprint 3a)
 - `lib/innhold/lager.js`: eneste vei til lagret innhold (`listSider`, `hentSide`, `lagreSide`). Filbasert i dag (`innhold/sider/<slug>.json`). **Kan byttes mot en database uten at resten endres.**
@@ -178,6 +181,7 @@ Et enkelt, vedlikeholdsfritt CMS (offentlig nettside) for Lillesand Misjonskirke
 | `innhold/arrangement-overstyringer.json` uten låsing/historikk (Sprint 5) | Samme klasse snarvei som sidelageret over — én redaktør på localhost | Database eller ferdig CMS, samtidig med sidelageret |
 | `innhold/omdirigeringer.json` er en tom tabell (Sprint 8) | De gamle eRedaktør-URL-ene er ikke kjent ennå | PO fyller inn `{ "/gammel-sti": "/ny-sti" }`-par når de er kjent |
 | ~~Filbasert lagring krever persistent disk~~ — **adressert 2026-09-28** | `render.yaml` (Sprint 9) definerer Render som PaaS med et persistent volum montert på `innhold/`, slik at sideinnhold/overstyringer/omdirigeringer overlever restart | PO oppretter selve Render-tjenesten (se punkt 14) — krever "Starter"-plan (betalt, disk finnes ikke på gratisplanen), ikke en kodeoppgave |
+| Admin-tabellene (Sprint 11) krever sidelengs scrolling *inni* tabellen på smale skjermer for å nå Fremhev/Skjul-knappene | Layoutbruddet (hele siden ble for bred) er fikset — dette er finpuss, ikke en feil | Vurder en mer mobiltilpasset radlayout for admin-tabellene (f.eks. kort i stedet for tabell under en breddegrense) hvis det oppleves tungvint i praksis |
 
 ## 14. Praktisk
 
