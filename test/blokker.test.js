@@ -97,4 +97,58 @@ describe('Blokker', () => {
     assert.ok(html.includes('<ul>'));
     assert.ok(html.includes('<li>Punkt 1</li>'));
   });
+
+  test('renderBlokker rendrer bilde med src og alt', () => {
+    const blokker = [{ type: 'bilde', src: 'a1b2c3d4.jpg', alt: 'En vakker kirke' }];
+    const html = renderBlokker(blokker);
+    assert.ok(html.includes('<img'));
+    assert.ok(html.includes('src="/bilder/a1b2c3d4.jpg"'));
+    assert.ok(html.includes('alt="En vakker kirke"'));
+    assert.ok(html.includes('max-width:100%'));
+  });
+
+  test('renderBlokker escaper spesialtegn i bilde-alt', () => {
+    const blokker = [{ type: 'bilde', src: 'test.jpg', alt: 'Test med " og <' }];
+    const html = renderBlokker(blokker);
+    assert.ok(!html.includes('Test med " og <'));
+    assert.ok(html.includes('alt="Test med &quot; og &lt;"'));
+  });
+
+  test('renderBlokker escaper src i bilde', () => {
+    const blokker = [{ type: 'bilde', src: 'test<script>.jpg', alt: 'Test' }];
+    const html = renderBlokker(blokker);
+    assert.ok(!html.includes('<script>'));
+    assert.ok(html.includes('src="/bilder/test&lt;script&gt;.jpg"'));
+  });
+
+  test('renderBlokker returnerer tom streng for bilde uten src', () => {
+    const blokker = [{ type: 'bilde', src: '', alt: 'Mangler kilde' }];
+    const html = renderBlokker(blokker);
+    assert.equal(html.trim(), '');
+  });
+
+  test('renderBlokker returnerer tom streng for bilde med null src', () => {
+    const blokker = [{ type: 'bilde', src: null, alt: 'Mangler kilde' }];
+    const html = renderBlokker(blokker);
+    assert.equal(html.trim(), '');
+  });
+
+  test('renderBlokker rendrer bilde uten alt-tekst', () => {
+    const blokker = [{ type: 'bilde', src: 'test.jpg' }];
+    const html = renderBlokker(blokker);
+    assert.ok(html.includes('<img'));
+    assert.ok(html.includes('src="/bilder/test.jpg"'));
+    assert.ok(html.includes('alt=""'));
+  });
+
+  test('renderBlokker rendrer liste med tekst og bilde', () => {
+    const blokker = [
+      { type: 'tekst', tekst: 'En introduksjonstekst' },
+      { type: 'bilde', src: 'bilde1.jpg', alt: 'Foto' }
+    ];
+    const html = renderBlokker(blokker);
+    assert.ok(html.includes('<p>En introduksjonstekst</p>'));
+    assert.ok(html.includes('<img'));
+    assert.ok(html.includes('src="/bilder/bilde1.jpg"'));
+  });
 });

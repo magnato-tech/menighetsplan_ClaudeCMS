@@ -9,6 +9,7 @@ import { lagOpprettArrangementer } from './lib/arrangementer.js';
 import { lagOpprettLager } from './lib/innhold/lager.js';
 import { lagOpprettOverstyringer } from './lib/innhold/overstyringer.js';
 import { lagOpprettOmdirigeringer } from './lib/innhold/omdirigeringer.js';
+import { lagOpprettBilder } from './lib/innhold/bilder.js';
 import { renderForside } from './lib/visning/forside.js';
 import { renderSide } from './lib/visning/side.js';
 import { renderDebug } from './lib/visning/debug.js';
@@ -24,6 +25,7 @@ const arrangementer = lagOpprettArrangementer(ROOT, KILDE_URL);
 const lager = lagOpprettLager(path.join(ROOT, 'innhold'));
 const overstyringer = lagOpprettOverstyringer(path.join(ROOT, 'innhold'));
 const omdirigeringer = lagOpprettOmdirigeringer(path.join(ROOT, 'innhold'));
+const bilder = lagOpprettBilder(path.join(ROOT, 'innhold'));
 
 // ---------- Server ----------
 
@@ -40,6 +42,29 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/logo.svg') {
       res.writeHead(200, { 'Content-Type': 'image/svg+xml' });
       return res.end(await readFile(path.join(ROOT, 'public', 'logo.svg')));
+    }
+
+    // Opplastede bilder
+    const bildeMatch = url.pathname.match(/^\/bilder\/([a-z0-9]+\.(jpg|jpeg|png|webp|gif))$/i);
+    if (bildeMatch) {
+      const filnavn = bildeMatch[1];
+      const ext = bildeMatch[2].toLowerCase();
+      const contentTypes = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'webp': 'image/webp',
+        'gif': 'image/gif'
+      };
+      const contentType = contentTypes[ext] || 'application/octet-stream';
+      try {
+        const data = await readFile(bilder.bildesti(filnavn));
+        res.writeHead(200, { 'Content-Type': contentType });
+        return res.end(data);
+      } catch (err) {
+        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        return res.end('Bildet finnes ikke');
+      }
     }
 
     // JSON API for arrangementer
@@ -78,7 +103,7 @@ const server = http.createServer(async (req, res) => {
 
     // Admin-ruter
     if (url.pathname.startsWith('/admin')) {
-      return handleAdmin(req, res, url, lager, overstyringer, arrangementer, ADMIN_PASSORD);
+      return handleAdmin(req, res, url, lager, overstyringer, arrangementer, bilder, ADMIN_PASSORD);
     }
 
     // Faste sider
