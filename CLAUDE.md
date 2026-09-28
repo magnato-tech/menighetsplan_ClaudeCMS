@@ -172,13 +172,20 @@ Et enkelt, vedlikeholdsfritt CMS (offentlig nettside) for Lillesand Misjonskirke
 | `innhold/omdirigeringer.json` er en tom tabell (Sprint 8) | De gamle eRedaktør-URL-ene er ikke kjent ennå | PO fyller inn `{ "/gammel-sti": "/ny-sti" }`-par når de er kjent |
 | Filbasert lagring generelt kjører ikke trygt på f.eks. Cloud Run (ephemeral filsystem) | Ikke aktuelt før hosting velges | Se svar om skyhosting: velg løsning med persistent lagring (VM eller PaaS med volum), eller bytt lagringslag |
 
-## 14. Praktisk (Windows-maskinen til PO)
+## 14. Praktisk
+
+**Standard arbeidsform: Windows-maskinen til PO**
 - Start: `node server.js` (port 3000). Tester: `node --test`.
 - Browser-panelets `preview_start` med launch.json **feiler** på denne maskinen («'C:\Program' is not recognized»). Start i stedet serveren i bakgrunnen med PowerShell (`Set-Location "<mappe>"; node server.js`) og åpne `http://localhost:3000` i panelet. Stopp serveren når du er ferdig.
 - CMS-mappen har nå sitt eget lokale git-repo (opprettet i Sprint 3b), separat fra repoet i hjemmemappen til brukeren. `git`-kommandoer her er trygge.
 - GitHub: [github.com/magnato-tech/menighetsplan_ClaudeCMS](https://github.com/magnato-tech/menighetsplan_ClaudeCMS) (remote `origin`), push fungerer via Git Credential Manager (cachede credentials, ingen `gh` installert). Appens eget repo (Menighetsplan2.0_mobil) røres fortsatt ikke herfra.
-- **Fra 2026-09-28:** GAIS fikk pushrettigheter til dette repoet under den korte Firestore-vurderingen (punkt 2, 13) — trolig ikke nødvendig lenger, men urørt inntil videre. Claude bør fortsatt `git fetch`/`pull` ved oppstart av en ny økt, i tilfelle.
+- GAIS-tilgangen (Firestore-vurderingen, punkt 2/13) er løst og lukket — se punkt 13.
 - **Ekte API-et (bekreftet virker, GAIS 2026-09-28):** `https://ais-dev-bpwtuilescw22tmh5zztaw-138177352715.europe-west3.run.app/api/offentlig/arrangementer` (støtter `?fra=YYYY-MM-DD&til=YYYY-MM-DD`). Åpent, ingen nøkkel, `Access-Control-Allow-Origin: *`, `Cache-Control: public, max-age=300`. Sett `MENIGHETSPLAN_API_URL` til denne for å bruke ekte data (se README). Det finnes også `/api/public/all` (grupper + faste møter) — **skal ikke brukes** av CMS-et, kun `/api/offentlig/arrangementer` er i kontrakten.
+
+**Alternativ arbeidsform: Claude Code on the web (kun når PO jobber fra mobilen)**
+- Fra Sprint 9 (2026-09-28) har repoet en `SessionStart`-hook (`.claude/hooks/session-start.sh` + `.claude/settings.json`) som gjør at fjernøkter starter rent. Prosjektet har ingen npm-avhengigheter, så hooken bare bekrefter at Node.js ≥20 er tilgjengelig.
+- Brukes **kun** når PO jobber fra mobil, for å nyttiggjøre tildelte agent-tokens der — ikke standard arbeidsform. Windows-arbeidsflyten over gjelder ellers.
+- Samme repo, samme branch-regler (jf. punkt 2 om GitHub) — ingen egen gren eller avvikende prosess for mobiløkter.
 
 ## 15. Kvalitetsgjennomgang, natt til 2026-09-28/29 (etter Sprint 4–6)
 PO ba Claude fortsette selvstendig i flere sprinter samme kveld («jobb i sprinter, test, planlegg og fortsett selvstendig til du går tom for tokens»), som et bevisst, eksplisitt unntak fra regelen i punkt 7 om én ny økt per sprint — gjort for å bruke kvelden effektivt mens PO var borte. Etter Sprint 4–6 kjørte Claude selv (ikke en agent) en 8-vinklers kodegjennomgang av alt som var bygget, siden mye var skrevet av flere Haiku-agenter på rad uten menneskelig blikk innimellom. Fem funnere kjørte parallelt; flere fant de samme problemene uavhengig av hverandre, som styrket tilliten til funnene.
