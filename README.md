@@ -20,23 +20,29 @@ Det trengs **ikke** `npm install` – prosjektet har ingen eksterne pakker.
 
 ## Koble til appen
 
-Standard er en innebygd mock av API-et. Menighetsplan-appen (via GAIS) har nå et ekte,
-offentlig API-endepunkt på Google Cloud Run. Sett miljøvariabelen for å bruke det:
+Standard er en innebygd mock av API-et, for både arrangementer og grupper.
+
+**Status 2026-09-29:** Menighetsplan-appen (via GAIS) skal ha et ekte, offentlig
+API-endepunkt på Google Cloud Run, men det er **verifisert utilgjengelig** i praksis –
+både `/api/offentlig/arrangementer` og `/api/public/all` omdirigerer til Google-innlogging
+i stedet for å svare med data, i strid med tidligere dokumentasjon om at det var åpent/
+nøkkelfritt. Sett `MENIGHETSPLAN_API_URL`/`MENIGHETSPLAN_GRUPPER_API_URL` først når dette
+er løst (se CLAUDE.md, gjeldsloggen):
 
 ```
 set MENIGHETSPLAN_API_URL=https://ais-dev-bpwtuilescw22tmh5zztaw-138177352715.europe-west3.run.app/api/offentlig/arrangementer
+set MENIGHETSPLAN_GRUPPER_API_URL=https://ais-dev-bpwtuilescw22tmh5zztaw-138177352715.europe-west3.run.app/api/public/all
 npm start
 ```
 
-Endepunktet krever ingen nøkkel/innlogging, filtrerer offentlig/internt server-side
-(kun offentlige arrangementer sendes ut), og har 5 minutters caching (`Cache-Control`).
-Merk: dette er en dev-sandbox på Cloud Run og kan få en «kald start» (litt treg første
-respons) etter lang inaktivitet – appens cache-i-fil-fallback (`innhold/cache/siste-vellykkede.json`)
-tar seg av dette hvis kallet skulle feile eller time ut.
+Appens cache-i-fil-fallback (`innhold/cache/siste-vellykkede.json` og
+`innhold/cache/siste-vellykkede-grupper.json`) tar seg av midlertidige feil/timeout når
+endepunktene faktisk er nåbare.
 
 | Variabel | Standard | Betydning |
 |---|---|---|
-| `MENIGHETSPLAN_API_URL` | innebygd mock | Adressen til appens offentlige API |
+| `MENIGHETSPLAN_API_URL` | innebygd mock | Adressen til appens offentlige API for arrangementer |
+| `MENIGHETSPLAN_GRUPPER_API_URL` | innebygd mock | Adressen til appens offentlige API for grupper (`/bli-med`) |
 | `PORT` | `3000` | Hvilken port siden kjører på |
 | `REFRESH_MINUTES` | `15` | Hvor ofte appen spørres på nytt |
 
