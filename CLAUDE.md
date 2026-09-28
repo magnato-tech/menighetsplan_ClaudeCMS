@@ -161,7 +161,8 @@ Ikke planlagt. Naturlige kandidater fra gjeldslisten (punkt 13): PO legger inn e
 ## 14. Praktisk (Windows-maskinen til PO)
 - Start: `node server.js` (port 3000). Tester: `node --test`.
 - Browser-panelets `preview_start` med launch.json **feiler** på denne maskinen («'C:\Program' is not recognized»). Start i stedet serveren i bakgrunnen med PowerShell (`Set-Location "<mappe>"; node server.js`) og åpne `http://localhost:3000` i panelet. Stopp serveren når du er ferdig.
-- CMS-mappen har nå sitt eget lokale git-repo (opprettet i Sprint 3b), separat fra repoet i hjemmemappen til brukeren. `git`-kommandoer her er trygge. Ikke koblet til GitHub ennå (`gh` mangler på maskinen) — se punkt 2.
+- CMS-mappen har nå sitt eget lokale git-repo (opprettet i Sprint 3b), separat fra repoet i hjemmemappen til brukeren. `git`-kommandoer her er trygge.
+- GitHub: [github.com/magnato-tech/menighetsplan_ClaudeCMS](https://github.com/magnato-tech/menighetsplan_ClaudeCMS) (remote `origin`), push fungerer via Git Credential Manager (cachede credentials, ingen `gh` installert). Appens eget repo (Menighetsplan2.0_mobil) røres fortsatt ikke herfra.
 
 ## 15. Kvalitetsgjennomgang, natt til 2026-09-28/29 (etter Sprint 4–6)
 PO ba Claude fortsette selvstendig i flere sprinter samme kveld («jobb i sprinter, test, planlegg og fortsett selvstendig til du går tom for tokens»), som et bevisst, eksplisitt unntak fra regelen i punkt 7 om én ny økt per sprint — gjort for å bruke kvelden effektivt mens PO var borte. Etter Sprint 4–6 kjørte Claude selv (ikke en agent) en 8-vinklers kodegjennomgang av alt som var bygget, siden mye var skrevet av flere Haiku-agenter på rad uten menneskelig blikk innimellom. Fem funnere kjørte parallelt; flere fant de samme problemene uavhengig av hverandre, som styrket tilliten til funnene.
