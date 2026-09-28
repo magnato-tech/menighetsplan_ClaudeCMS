@@ -34,6 +34,23 @@ test('Menighetsplan-API: ukjent versjon gir tydelig feil', () => {
   assert.throws(() => mp.tolk('{ødelagt', FRA, TIL), /ikke gyldig JSON/);
 });
 
+test('Menighetsplan-API: ekte responsformat fra GAIS (tagger som strenger, ingen dobbel Gudstjeneste-tag)', () => {
+  const ekteSvar = {
+    versjon: 1, kilde: 'menighetsplan', generert: '2026-09-28T12:19:58.366Z', tidssone: 'Europe/Oslo',
+    arrangementer: [
+      { id: 'gathering-1', type: 'gudstjeneste', tittel: 'Gudstjeneste & dåp', tema: '', bibeltekst: '', beskrivelse: '', start: '2026-09-06T13:00:00+02:00', slutt: '2026-09-06T15:00:00+02:00', heldag: false, sted: 'Hovedsalen og kafeen', status: 'planlagt', tagger: ['gudstjeneste'], sistEndret: '2026-09-28T12:19:58.365Z' },
+      { id: 'gathering-2', type: 'arrangement', tittel: 'Ungdomsmøte & lovsang', tema: '', bibeltekst: '', beskrivelse: '', start: '2026-09-11T21:00:00+02:00', slutt: '2026-09-11T23:00:00+02:00', heldag: false, sted: 'Ungdomssalen', status: 'planlagt', tagger: ['ungdom'], sistEndret: '2026-09-28T12:19:58.366Z' },
+    ],
+  };
+  const r = mp.tolk(JSON.stringify(ekteSvar), Date.UTC(2026, 8, 1), Date.UTC(2026, 9, 1));
+  assert.equal(r.antall, 2);
+  const gudstj = r.forekomster.find(o => o.uid === 'gathering-1');
+  assert.equal(gudstj.erGudstjeneste, true);
+  assert.deepEqual(gudstj.categories, ['Gudstjeneste']); // ikke dobbel opp med den rå "gudstjeneste"-taggen
+  const ungdom = r.forekomster.find(o => o.uid === 'gathering-2');
+  assert.deepEqual(ungdom.categories, ['ungdom']);
+});
+
 test('Menighetsplan-API: tåler manglende valgfrie felt og hopper over ugyldige rader', () => {
   const r = mp.tolk(JSON.stringify({ versjon: 1, arrangementer: [
     { id: 'a', type: 'arrangement', tittel: 'Minimalt', start: '2026-10-01T18:00:00+02:00', status: 'planlagt' },

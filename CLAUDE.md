@@ -8,14 +8,14 @@
 Et enkelt, vedlikeholdsfritt CMS (offentlig nettside) for Lillesand Misjonskirke, der **mesteparten av innholdet genereres automatisk** fra menighetsappen **Menighetsplan 2.0** ([Menighetsplan2.0_mobil](https://github.com/magnato-tech/Menighetsplan2.0_mobil)). CMS-et skal med tiden **erstatte eRedaktør** og ta over `lillesandmisjonskirke.no`.
 
 ## 2. Kjerneprinsipp
-- CMS-et er en **egen modul** (egen kode, hosting og domene) som **kun integrerer med Menighetsplan 2.0**. Ingen iCal eller andre kilder. Kontrakt: `INTEGRASJON-MENIGHETSPLAN.md`.
-  - **Endret 2026-09-28 (avklart med PO, se punkt 6):** Integrasjonen skjer ikke via et eget offentlig API, men ved at CMS-et leser **direkte fra appens navngitte Firestore-database** (`ai-studio-menighetsplan20-ea550243-0a45-4d48-8d8e-b0849c858e7b`) med Firebase Web SDK. **GAIS** (som sitter på app-/Firebase-siden) eier tilkoblingen og arbeider direkte i CMS-repoet med denne integrasjonen, inkludert push. Claude sin rolle her er å verifisere det GAIS leverer (tester, whitelist av felt, at kontrakten holder), ikke å bygge tilkoblingen selv.
+- CMS-et er en **egen modul** (egen kode, hosting og domene) som **kun integrerer med Menighetsplan 2.0, via et offentlig, lesbart API**. Ingen iCal, ingen direkte Firestore-tilkobling, ingen andre kilder. Kontrakt: `INTEGRASJON-MENIGHETSPLAN.md`.
+  - **Avklart endelig 2026-09-28 (se punkt 6):** Det ble kortvarig vurdert å koble CMS-et direkte til appens Firestore-database (Firebase Web SDK) — det er **forlatt**. Det faktiske oppsettet: API-et kjører i selve appen (`server.ts` i AI Studio), deployet på Google Cloud Run, og eksponerer `GET /api/offentlig/arrangementer` (åpent, ingen nøkkel, server-side filtrert til kun offentlige/relevante felt, `Cache-Control: public, max-age=300`). URL: se punkt 14. Dette er nøyaktig den opprinnelige kontrakten CMS-et allerede var bygget mot (`lib/kilder/menighetsplan.js`), og krever ingen npm-avhengigheter.
 - **Menighetsplan er fasit** for gudstjenester og arrangementer. Enkeltarrangementer (Kulturnatta, Bibeldagen o.l.) legges inn der, ikke dobbelt i CMS-et.
-- CMS-et leser, men skriver aldri tilbake, selv om Firestore-reglene i dag tillater skriving. Persondata og interne data forlater aldri appen: CMS-et skal **kun** lese samlingen `gatherings`, og **kun** offentlige felt derfra (se hviteliste i `INTEGRASJON-MENIGHETSPLAN.md`). Samlingene `persons`, `groups`, `tasks`, `assignments`, `groupMessages`, `gatheringAttendances` skal CMS-koden aldri berøre.
-- All kunnskap om appen ligger i én adapterfil (`lib/kilder/menighetsplan.js`) — resten av CMS-et kjenner ikke til Firestore, bare adapterets grensesnitt.
+- CMS-et leser, men skriver aldri tilbake. Persondata og interne data forlater aldri appen — API-et filtrerer dette bort server-side før CMS-et ser noe (bekreftet av GAIS: ingen personopplysninger i responsen, interne samlinger/grupper filtreres bort).
+- All kunnskap om appen ligger i én adapterfil (`lib/kilder/menighetsplan.js`). CMS-et leser aldri Firestore direkte, og kjenner ikke til databasen bak API-et.
 - **Appens kode endres ikke fra CMS-prosjektet.** Appen utvikles og publiseres i Google AI Studio (`https://menighetsplan2-0-mobil-1.ai.studio`). PO ønsker **ikke** å lime inn prompter i AI Studio. Mappen `..\Menighetsplan2.0_mobil-main` er en lokal **sandkasse**: der kan vi endre fritt, men endringene når ikke den ekte appen eller databasen.
 - Filen `AI-STUDIO-PROMPTER.md` er **slettet med vilje** og skal ikke gjenskapes.
-- **GitHub:** CMS-et har sitt eget repo, `magnato-tech/menighetsplan_ClaudeCMS`. Appens repo røres ikke. GAIS har nå også pushrettigheter til CMS-repoet for integrasjonsarbeidet (se over).
+- **GitHub:** CMS-et har sitt eget repo, `magnato-tech/menighetsplan_ClaudeCMS`. Appens repo røres ikke. GAIS har fortsatt pushrettigheter til CMS-repoet fra tidligere, men trenger trolig ikke bruke dem nå — API-tilkoblingen er kun én miljøvariabel (`MENIGHETSPLAN_API_URL`, se README), ingen kodeendring i CMS-repoet var nødvendig utover en liten feltmapping-fiks (se punkt 10).
 
 ## 3. Foreløpige antagelser (bekreftes/justeres i Sprint 0)
 - Dagens nettside (lillesandmisjonskirke.no, eRedaktør) skal erstattes av CMS-et. Faste sider flyttes over, og gamle lenker videresendes.
@@ -56,9 +56,9 @@ Et enkelt, vedlikeholdsfritt CMS (offentlig nettside) for Lillesand Misjonskirke
 | 8 | **Djevelens advokat** | Utfordrer valg før de låses — se punkt 6 |
 
 ## 6. Djevelens advokat — status (detaljer i `ARKITEKTUR.md`)
-- **Fortsatt kritisk, bevisst akseptert av PO for nå:** `firestore.rules` i appen tillater lesing og skriving for alle, også av persondata, og appen har ingen ekte innlogging. CMS-et kompenserer ved kun å lese `gatherings` og kun offentlige felt derfra (se punkt 2) — men den underliggende åpenheten i databasen er urørt og må lukkes før nettsiden settes i drift (gjeldslogg, punkt 13).
-- **Avklart 2026-09-28:** Hovedspørsmålet (appen har ikke noe API, og PO vil ikke endre den via AI Studio) er løst som alternativ (a): CMS-et leser direkte fra appens navngitte Firestore-database via Firebase Web SDK. GAIS eier og drifter denne tilkoblingen og arbeider direkte i CMS-repoet (se punkt 2). Alternativ (b) (eget API et annet sted enn AI Studio) er dermed lagt bort.
-- Appen mangler felt for offentlig/gudstjeneste/avlyst/sluttid. Midlertidige regler står i `INTEGRASJON-MENIGHETSPLAN.md`.
+- **Nedgradert 2026-09-28 (ikke lenger CMS-ets problem):** Det tidligere kritiske punktet om at `firestore.rules` tillot lesing/skriving for alle, gjaldt et scenario der CMS-et skulle koble seg direkte til Firestore. Siden CMS-et nå går via appens API (punkt 2), er databasens egne regler internt anliggende for appen/GAIS, ikke noe CMS-et er eksponert mot — så lenge API-et fortsetter å filtrere korrekt server-side (bekreftet av GAIS, se punkt 2).
+- **Avklart endelig 2026-09-28:** Hovedspørsmålet (appen hadde ikke noe API) er løst — appen *har* nå et API (`server.ts` i AI Studio, deployet på Cloud Run), som er alternativ (b) fra den opprinnelige listen. Det korte mellomsteget med direkte Firestore-tilkobling (alternativ a) ble forlatt før noe ble bygget.
+- Appen mangler felt for offentlig/gudstjeneste/avlyst/sluttid **i selve appens Firestore-modell** — men dette er nå skjult bak API-et, som allerede leverer `type`, `status` (inkl. `avlyst`), `start`/`slutt`. Ikke lenger CMS-ets bekymring på samme måte som før.
 - Løst: sommertid, API nede/feil format/ny versjon, hviteliste mot datalekkasje, løs kobling.
 - Overgang fra eRedaktør: faste sider flyttes, og gamle lenker videresendes.
 
@@ -130,7 +130,11 @@ Et enkelt, vedlikeholdsfritt CMS (offentlig nettside) for Lillesand Misjonskirke
 **Senere (ikke planlagt):** koble til ekte data (avhenger av PO-valg i punkt 6), eget GitHub-repo (avhenger av at `gh` installeres), hosting, overgang fra eRedaktør med videresending av gamle lenker.
 
 ## 10. Neste sprint
-Venter på at GAIS pusher Firestore-integrasjonen (`lib/kilder/menighetsplan.js` mot den navngitte databasen, se punkt 2 og 6) til CMS-repoet. Når den lander, er Claude sin oppgave å verifisere: `node --test` grønt, at kun `gatherings`/offentlige felt hentes, at whitelisten i `INTEGRASJON-MENIGHETSPLAN.md` følges, at mock fortsatt fungerer som fallback, og at ekte data vises riktig på forsiden — før det rapporteres til PO. Uavhengig av GAIS: PO kan når som helst legge inn ekte tekst på de faste sidene via admin (gjeldslogg, punkt 13).
+**Ekte API-tilkobling landet 2026-09-28.** GAIS bekreftet at API-et kjører på Cloud Run (URL i punkt 14) og delte et ekte eksempelsvar. Claude sammenlignet det mot kontrakten i `lib/kilder/menighetsplan.js` og fant ett avvik: ekte `tagger` er en liste med rene strenger (`["gudstjeneste"]`), mens koden fra Sprint 4 forventet objekter (`{ verdi }`, som i mock-dataene) — det ga tomme kategori-tagger og ville laget en duplikat "Gudstjeneste"-tag. Rettet i `lib/kilder/menighetsplan.js` (støtter nå begge former, og filtrerer bort den rå "gudstjeneste"-taggen når `erGudstjeneste` allerede er satt), med ny test i `test/kilder.test.js` som bruker GAIS sitt ekte eksempelsvar direkte. `node --test`: 89/89 grønt.
+
+**Ikke verifisert av Claude:** faktisk nettverkskall mot Cloud Run-URL-en — denne økten sin sandkasse blokkerer utgående kall dit (proxy svarer 403, policy-avgjørelse, ikke appens feil). PO må selv sette `MENIGHETSPLAN_API_URL` (se README) og bekrefte at ekte arrangementer vises riktig på `http://localhost:3000` før dette regnes som fullt verifisert.
+
+**Neste steg:** PO tester ekte tilkobling lokalt. Uavhengig av dette: PO kan når som helst legge inn ekte tekst på de faste sidene via admin (gjeldslogg, punkt 13).
 
 ## 11. Kodestruktur og prinsipper for fleksibilitet (Sprint 3a)
 - `lib/innhold/lager.js`: eneste vei til lagret innhold (`listSider`, `hentSide`, `lagreSide`). Filbasert i dag (`innhold/sider/<slug>.json`). **Kan byttes mot en database uten at resten endres.**
@@ -150,13 +154,14 @@ Venter på at GAIS pusher Firestore-integrasjonen (`lib/kilder/menighetsplan.js`
 | Snarvei | Hvorfor den er greit nå | Må gjøres senere |
 |---|---|---|
 | Plassholdertekst på de faste sidene | Vi trenger noe å vise i MVP-en | PO legger inn ekte tekst via admin (3b) |
-| Mock i stedet for ekte Menighetsplan-data | Datakilden er nå avklart (punkt 6), men GAIS-integrasjonen er ikke landet i CMS-repoet ennå | Vent på GAIS sin push av `lib/kilder/menighetsplan.js`, deretter verifisere mot kontrakten |
+| Mock er fortsatt standard (`MENIGHETSPLAN_API_URL` ikke satt) | Ekte API er bekreftet og kontrakten verifisert (punkt 10), men selve nettverkskallet er ikke testet av Claude (sandkasse blokkerer utgående kall) | PO setter miljøvariabelen lokalt og bekrefter ekte data på forsiden |
 | Nye felt på `Gathering` finnes bare i app-sandkassen | Appen endres ikke via AI Studio nå | Få feltene inn i den ekte appen |
 | Egen enkel tekstmarkering (`##`, `-`) i stedet for en redigerer | Fungerer, og lagres som blokker | Erstattes av en blokkredigerer |
 | Fillagring uten låsing og historikk | Én redaktør på localhost | Database eller ferdig CMS |
 | Admin med HTTP Basic Auth (Sprint 3b) | Sikkerhet er ikke viktig nå (PO) | Ekte innlogging og roller |
-| Den ekte appdatabasen er åpen for alle (`allow read, write: if true`) | Utenfor CMS-et, PO har akseptert risikoen midlertidig for å få ekte data inn nå | Lukkes før nettsiden settes i drift |
-| GAIS har pushrettigheter til CMS-repoet (2026-09-28) | Nødvendig for at Firestore-integrasjonen skal fungere knirkefritt, PO-beslutning | Vurderes på nytt når integrasjonen er ferdig og stabil |
+| Den ekte appdatabasen (Firestore) sine egne regler er fortsatt åpne | Ikke lenger CMS-ets direkte problem siden vi går via API-et (punkt 6), men fortsatt en risiko for appen selv | Appens/GAIS sitt ansvar å lukke før produksjon |
+| GAIS har pushrettigheter til CMS-repoet (2026-09-28) | Ble gitt for et Firestore-scenario som ikke lenger er aktuelt (punkt 2) — trolig unødvendig nå som integrasjonen kun er én miljøvariabel | Vurder å fjerne tilgangen igjen, eller la den stå til PO sier fra |
+| API-et kjører på en dev-sandbox (Cloud Run), kan ha kald start / gå i dvale | Under aktiv utvikling, GAIS har bekreftet fallback til cache/mock dekker dette | Fast produksjons-URL når `lillesandmisjonskirke.no` settes i drift |
 | `innhold/arrangement-overstyringer.json` uten låsing/historikk (Sprint 5) | Samme klasse snarvei som sidelageret over — én redaktør på localhost | Database eller ferdig CMS, samtidig med sidelageret |
 | Fremhevet arrangement forsvinner helt hvis det ikke matcher `?visning=`-filteret (Sprint 5, se punkt 15) | Ikke definert hva som er «riktig» oppførsel ennå | PO avgjør: skal fremhevet overstyre filteret? |
 
@@ -165,8 +170,8 @@ Venter på at GAIS pusher Firestore-integrasjonen (`lib/kilder/menighetsplan.js`
 - Browser-panelets `preview_start` med launch.json **feiler** på denne maskinen («'C:\Program' is not recognized»). Start i stedet serveren i bakgrunnen med PowerShell (`Set-Location "<mappe>"; node server.js`) og åpne `http://localhost:3000` i panelet. Stopp serveren når du er ferdig.
 - CMS-mappen har nå sitt eget lokale git-repo (opprettet i Sprint 3b), separat fra repoet i hjemmemappen til brukeren. `git`-kommandoer her er trygge.
 - GitHub: [github.com/magnato-tech/menighetsplan_ClaudeCMS](https://github.com/magnato-tech/menighetsplan_ClaudeCMS) (remote `origin`), push fungerer via Git Credential Manager (cachede credentials, ingen `gh` installert). Appens eget repo (Menighetsplan2.0_mobil) røres fortsatt ikke herfra.
-- **Fra 2026-09-28:** GAIS har også fått pushrettigheter til dette repoet, for å levere Firestore-integrasjonen direkte (se punkt 2, 6, 13). Claude bør derfor `git fetch`/`pull` ved oppstart av en ny økt for å se om GAIS har pushet noe siden sist, før videre arbeid planlegges.
-- Firebase-config for ekte data (fra GAIS): prosjekt `gudstjenesteplanlegger2`, navngitt database `ai-studio-menighetsplan20-ea550243-0a45-4d48-8d8e-b0849c858e7b`. Web API-nøkkelen er ment å være offentlig (beskyttes av Firestore-regler, ikke hemmelighold), men skal likevel legges i miljøvariabel/config-fil, ikke hardkodes spredt i koden.
+- **Fra 2026-09-28:** GAIS fikk pushrettigheter til dette repoet under den korte Firestore-vurderingen (punkt 2, 13) — trolig ikke nødvendig lenger, men urørt inntil videre. Claude bør fortsatt `git fetch`/`pull` ved oppstart av en ny økt, i tilfelle.
+- **Ekte API-et (bekreftet virker, GAIS 2026-09-28):** `https://ais-dev-bpwtuilescw22tmh5zztaw-138177352715.europe-west3.run.app/api/offentlig/arrangementer` (støtter `?fra=YYYY-MM-DD&til=YYYY-MM-DD`). Åpent, ingen nøkkel, `Access-Control-Allow-Origin: *`, `Cache-Control: public, max-age=300`. Sett `MENIGHETSPLAN_API_URL` til denne for å bruke ekte data (se README). Det finnes også `/api/public/all` (grupper + faste møter) — **skal ikke brukes** av CMS-et, kun `/api/offentlig/arrangementer` er i kontrakten.
 
 ## 15. Kvalitetsgjennomgang, natt til 2026-09-28/29 (etter Sprint 4–6)
 PO ba Claude fortsette selvstendig i flere sprinter samme kveld («jobb i sprinter, test, planlegg og fortsett selvstendig til du går tom for tokens»), som et bevisst, eksplisitt unntak fra regelen i punkt 7 om én ny økt per sprint — gjort for å bruke kvelden effektivt mens PO var borte. Etter Sprint 4–6 kjørte Claude selv (ikke en agent) en 8-vinklers kodegjennomgang av alt som var bygget, siden mye var skrevet av flere Haiku-agenter på rad uten menneskelig blikk innimellom. Fem funnere kjørte parallelt; flere fant de samme problemene uavhengig av hverandre, som styrket tilliten til funnene.

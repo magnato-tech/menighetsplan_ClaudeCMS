@@ -20,12 +20,19 @@ Det trengs **ikke** `npm install` – prosjektet har ingen eksterne pakker.
 
 ## Koble til appen
 
-Standard er en innebygd mock av API-et. Hvis appen en gang får endepunktet:
+Standard er en innebygd mock av API-et. Menighetsplan-appen (via GAIS) har nå et ekte,
+offentlig API-endepunkt på Google Cloud Run. Sett miljøvariabelen for å bruke det:
 
 ```
-set MENIGHETSPLAN_API_URL=https://menighetsplan2-0-mobil-1.ai.studio/api/offentlig/arrangementer
+set MENIGHETSPLAN_API_URL=https://ais-dev-bpwtuilescw22tmh5zztaw-138177352715.europe-west3.run.app/api/offentlig/arrangementer
 npm start
 ```
+
+Endepunktet krever ingen nøkkel/innlogging, filtrerer offentlig/internt server-side
+(kun offentlige arrangementer sendes ut), og har 5 minutters caching (`Cache-Control`).
+Merk: dette er en dev-sandbox på Cloud Run og kan få en «kald start» (litt treg første
+respons) etter lang inaktivitet – appens cache-i-fil-fallback (`data/siste-vellykkede.json`)
+tar seg av dette hvis kallet skulle feile eller time ut.
 
 | Variabel | Standard | Betydning |
 |---|---|---|
