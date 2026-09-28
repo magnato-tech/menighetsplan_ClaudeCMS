@@ -93,6 +93,51 @@ describe('Admin', () => {
     assert.ok(feil && feil.includes('små bokstaver, tall og bindestrek'));
   });
 
+  test('validateSkjema – godtar gyldig Facebook-lenke og legger til facebook-blokk', () => {
+    const data = {
+      slug: 'test-fb',
+      tittel: 'Test',
+      tekst: 'Noe',
+      facebookUrl: 'https://www.facebook.com/lillesandmisjonskirke',
+      rekkefolge: '1'
+    };
+    const { feil, side } = validateSkjema(data, false, lager);
+    assert.equal(feil, null);
+    const fbBlokk = side.blokker.find(b => b.type === 'facebook');
+    assert.ok(fbBlokk);
+    assert.equal(fbBlokk.side, 'https://www.facebook.com/lillesandmisjonskirke');
+  });
+
+  test('validateSkjema – avviser Facebook-lenke som ikke peker til facebook.com', () => {
+    const data = {
+      slug: 'test-fb-feil',
+      tittel: 'Test',
+      tekst: 'Noe',
+      facebookUrl: 'https://evil.example.com/lillesandmisjonskirke',
+      rekkefolge: '1'
+    };
+    const { feil } = validateSkjema(data, false, lager);
+    assert.ok(feil && feil.includes('facebook.com'));
+  });
+
+  test('validateSkjema – fjernFacebook fjerner eksisterende facebook-blokk', () => {
+    const eksisterendeSide = {
+      slug: 'test-fb-fjern',
+      tittel: 'Test',
+      blokker: [{ type: 'facebook', side: 'https://www.facebook.com/gammel', id: 'abc123' }]
+    };
+    const data = {
+      slug: 'test-fb-fjern',
+      tittel: 'Test',
+      tekst: 'Noe',
+      fjernFacebook: 'on',
+      rekkefolge: '1'
+    };
+    const { feil, side } = validateSkjema(data, true, lager, eksisterendeSide);
+    assert.equal(feil, null);
+    assert.ok(!side.blokker.some(b => b.type === 'facebook'));
+  });
+
   test('validerNySlug – returnerer true for ukjent slug', async () => {
     const resultat = await validerNySlug('helt-ny-slug', lager);
     assert.equal(resultat, true);

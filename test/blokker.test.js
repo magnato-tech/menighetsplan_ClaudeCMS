@@ -151,4 +151,24 @@ describe('Blokker', () => {
     assert.ok(html.includes('<img'));
     assert.ok(html.includes('src="/bilder/bilde1.jpg"'));
   });
+
+  test('renderBlokker rendrer Facebook-blokk som iframe med kodet lenke', () => {
+    const blokker = [{ type: 'facebook', side: 'https://www.facebook.com/lillesandmisjonskirke' }];
+    const html = renderBlokker(blokker);
+    assert.ok(html.includes('<iframe'));
+    assert.ok(html.includes('facebook.com/plugins/page.php'));
+    assert.ok(html.includes(encodeURIComponent('https://www.facebook.com/lillesandmisjonskirke')));
+  });
+
+  test('renderBlokker returnerer tom streng for Facebook-blokk uten side', () => {
+    const blokker = [{ type: 'facebook', side: '' }];
+    const html = renderBlokker(blokker);
+    assert.equal(html.trim(), '');
+  });
+
+  test('renderBlokker escaper ondsinnet innhold i Facebook-lenken', () => {
+    const blokker = [{ type: 'facebook', side: 'https://www.facebook.com/x"><script>alert(1)</script>' }];
+    const html = renderBlokker(blokker);
+    assert.ok(!html.includes('<script>'));
+  });
 });

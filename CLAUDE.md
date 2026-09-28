@@ -157,11 +157,17 @@ Et enkelt, vedlikeholdsfritt CMS (offentlig nettside) for Lillesand Misjonskirke
 - `server.js`, `lib/admin/index.js`, `lib/admin/validering.js`, `lib/visning/admin.js` (Haiku-agent): kobler sammen opplasting i admin-skjemaet (med forhåndsvisning og «fjern bilde»), statisk serverings-rute for `/bilder/<filnavn>` (path-traversal-trygg regex), og bygger `blokker`-arrayet med bilde først, tekst under (matcher mønsteret i referansebildene).
 - Claude verifiserte selv etter begge agentene: rettet en skrivefeil i en kommentar, trakk ut en duplisert 15-linjers multipart/urlencoded-forgrening i `lib/admin/index.js` til én hjelpefunksjon (`parseSkjemaData`), sjekket at escaping var riktig i skjemaet (samme type feil som XSS-funnet i punkt 15), og kjørte en egen full curl-flyt (opprett side med ekte PNG → bildet serveres med riktig Content-Type → vises korrekt på offentlig side → fjernes riktig via «fjern bilde»-avkrysning). `node --test`: 115/115 grønt. All testdata ryddet bort etterpå.
 
-**Neste steg:** alt annet gjenstående krever PO. Se gjeldsloggen (punkt 13): ekte tekst på faste sider (nå med mulighet for bilde), lokal verifisering av ekte API-tilkobling, gamle URL-er fra eRedaktør, og hosting via Render.
+**Sprint 13** ✅ Facebook-integrasjon (PO-beslutning, dokumentert i kommunikasjonsstrategien): menigheten bruker i dag kun Facebook direkte, og ønsket at Facebook-innlegg skal kunne vises på nettsiden — valgte «Facebook viser til/på nettsiden» (Facebooks ferdige Page Plugin-iframe) fremfor selvbygd auto-posting via Graph API (mer vedlikehold, tokens som utløper) eller ren manuell lenking. Claude bygget dette selv, samme mønster som bilde-blokken i Sprint 12:
+- Ny blokktype `facebook` i `lib/visning/blokker.js`: rendrer Facebooks offisielle `page.php`-iframe (ingen API-nøkkel, ingen tokens å vedlikeholde), med `encodeURIComponent` + `esc()` for trygg escaping av sideadressen.
+- `lib/admin/validering.js`: nytt valgfritt felt `facebookUrl` per side, validert til å måtte starte med `https://www.facebook.com/` eller `https://facebook.com/`, med samme fjern-mønster som bilde (`fjernFacebook`-avkrysning).
+- `lib/visning/admin.js`: nytt felt i sideskjemaet med hjelpetekst.
+- Verifisert: `node --test` (121/121 grønt, inkl. 6 nye tester for rendering/escaping/validering) og egen curl-flyt (opprettet side med ekte Facebook-URL → riktig iframe i offentlig HTML, korrekt URL-koding bekreftet).
+
+**Neste steg:** alt annet gjenstående krever PO. Se gjeldsloggen (punkt 13): ekte tekst på faste sider (nå med mulighet for bilde og Facebook-feed), lokal verifisering av ekte API-tilkobling, gamle URL-er fra eRedaktør, og hosting via Render.
 
 ## 11. Kodestruktur og prinsipper for fleksibilitet (Sprint 3a)
 - `lib/innhold/lager.js`: eneste vei til lagret innhold (`listSider`, `hentSide`, `lagreSide`). Filbasert i dag (`innhold/sider/<slug>.json`). **Kan byttes mot en database uten at resten endres.**
-- `lib/visning/blokker.js`: register over blokktyper (`tekst`, `bilde` fra Sprint 12). En side er `{ slug, tittel, meny: { vis, rekkefolge }, blokker: [...], sistEndret }`. Nye innholdstyper, som kart, blir nye blokktyper på samme måte.
+- `lib/visning/blokker.js`: register over blokktyper (`tekst`, `bilde` fra Sprint 12, `facebook` fra Sprint 13). En side er `{ slug, tittel, meny: { vis, rekkefolge }, blokker: [...], sistEndret }`. Nye innholdstyper, som kart, blir nye blokktyper på samme måte.
 - `lib/innhold/bilder.js`: lagring av opplastede bilder (`innhold/bilder/`), `lib/admin/multipart.js`: generisk multipart/form-data-parsing for filopplasting i admin.
 - `lib/visning/*`: layout (`felles.js`), `forside.js`, `side.js`, `debug.js`. `lib/arrangementer.js` tar seg av henting og cache. `server.js` er bare en ruter.
 - Innholdet ligger som ren JSON, så det kan flyttes til et større CMS senere.
