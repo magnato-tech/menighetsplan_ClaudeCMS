@@ -165,11 +165,27 @@ Et enkelt, vedlikeholdsfritt CMS (offentlig nettside) for Lillesand Misjonskirke
 
 **Neste steg:** alt annet gjenstående krever PO. Se gjeldsloggen (punkt 13): ekte tekst på faste sider (nå med mulighet for bilde og Facebook-feed), lokal verifisering av ekte API-tilkobling, gamle URL-er fra eRedaktør, og hosting via Render.
 
+**Sprint 14 (2026-09-29):** En lokal Windows-økt (denne) pushet ved et uhell videre på et flere sprinter gammelt lokalt repo, uten å vite at en cloud-økt (GAIS) i mellomtiden hadde committet og pushet Sprint 8–13 til `master`. `git push` ble korrekt avvist av GitHub (non-fast-forward). PO oppdaget dette og ba økten nullstille til `origin/master` og starte på nytt derfra — gjort (gammelt lokalt arbeid ligger trygt på branchen `backup-lokalt-arbeid-2026-09-29`, ikke slettet, ikke brukt videre). **Lærdom for fremtidige økter:** sjekk alltid `git fetch && git log HEAD..origin/master` før man bygger videre, spesielt etter at PO har nevnt en annen økt (cloud/mobil) har jobbet på prosjektet.
+
+To PO-beslutninger tatt i forbindelse med opprydningen:
+- **`/api/public/all`-restriksjonen (punkt 14) er opphevet av PO:** CMS kan nå bruke dette endepunktet (grupper + faste møter), ikke bare `/api/offentlig/arrangementer`. Se Sprint 15 for det første forsøket på å faktisk bruke det.
+- Det lokale repoet `menighetsplan_claude` (klonet av en tidligere cloud-økt, se punkt 2/14) skal stå urørt — ikke brukes som datakilde, ikke slettes, ikke endres videre herfra.
+
+**Nytt funn (2026-09-29), viktigere enn selve grupper-spørsmålet:** `/api/public/all` og `/api/offentlig/arrangementer` omdirigerer begge til **Google-innlogging** når de kalles utenfra (verifisert både med `curl` og med en ekte nettleser) — de er altså IKKE åpne/nøkkelfrie slik punkt 14 sier GAIS bekreftet. Cloud Run-tjenesten er tilsynelatende satt opp til å kreve autentisering, ikke anonym tilgang. Dette rammer **hele** den «ekte API-tilkoblingen» fra Sprint 8–10, ikke bare grupper — den ble aldri faktisk verifisert utenfra (jf. gjeldsloggen), og er nå bekreftet ikke å virke som dokumentert. **PO-beslutning:** fortsett med mock-data til dette er løst (enten Cloud Run-tjenesten settes til anonym tilgang, eller URL-en er endret). Ikke CMS-ets bug – et driftsspørsmål for Cloud Run-oppsettet.
+
+**Sprint 15** ✅ Ny side `/bli-med` og «Nyheter og aktuelt» (134/134 tester grønne):
+- `lib/kilder/menighetsplan.js` fikk `tolkGrupper()` (samme forsvarlige stil som `tolk()`: hopper over ugyldige rader, tydelig feil ved manglende `grupper`-liste). `lib/grupper.js` (nytt) speiler `lib/arrangementer.js` sitt hente/cache/fallback-mønster, cache under `innhold/cache/siste-vellykkede-grupper.json` (persistent disk, lagt til `.gitignore`).
+- `/bli-med` (`lib/visning/bli-med.js`, nytt): viser tjenestegrupper og husfellesskap som kort, kun offentlig-trygge felt (navn, kategori, beskrivelse — aldri medlemmer/ledere/kontaktinfo). Lenke i toppmenyen.
+- **«Fremhevet» er omdøpt til «Nyheter og aktuelt»** på forsiden (PO-beslutning), med bildekort i stedet for tekstrader. `lib/innhold/overstyringer.js` fikk `settBilde(uid, filnavn)`. Bildeopplasting i `/admin/arrangementer` gjenbruker Sprint 12 sin multipart/`lib/innhold/bilder.js`-infrastruktur (ekte filopplasting, ikke en limt-inn URL) — samme mønster som bilder på faste sider.
+- «Hent nå» i admin oppdaterer nå både arrangementer og grupper.
+- Mock er fortsatt datakilden for grupper (se punkt 10 om hvorfor), samme status som arrangementer.
+- Verifisert av Claude: `node --test` (134/134), curl-flyt for grupper-parsing, og i nettleserpanelet: `/bli-med` viser alle fire mock-gruppene korrekt, full opplastingsflyt (ekte PNG → fremhevet arrangement får bildekort på forsiden → fjern bilde-avkrysning → forsvinner igjen). All testdata og det midlertidig opplastede testbildet ryddet bort etterpå (`arrangement-overstyringer.json` bekreftet `{}`, `innhold/bilder/` tom).
+
 ## 11. Kodestruktur og prinsipper for fleksibilitet (Sprint 3a)
 - `lib/innhold/lager.js`: eneste vei til lagret innhold (`listSider`, `hentSide`, `lagreSide`). Filbasert i dag (`innhold/sider/<slug>.json`). **Kan byttes mot en database uten at resten endres.**
 - `lib/visning/blokker.js`: register over blokktyper (`tekst`, `bilde` fra Sprint 12, `facebook` fra Sprint 13). En side er `{ slug, tittel, meny: { vis, rekkefolge }, blokker: [...], sistEndret }`. Nye innholdstyper, som kart, blir nye blokktyper på samme måte.
 - `lib/innhold/bilder.js`: lagring av opplastede bilder (`innhold/bilder/`), `lib/admin/multipart.js`: generisk multipart/form-data-parsing for filopplasting i admin.
-- `lib/visning/*`: layout (`felles.js`), `forside.js`, `side.js`, `debug.js`. `lib/arrangementer.js` tar seg av henting og cache. `server.js` er bare en ruter.
+- `lib/visning/*`: layout (`felles.js`), `forside.js`, `side.js`, `bli-med.js` (Sprint 15), `debug.js`. `lib/arrangementer.js`/`lib/grupper.js` (Sprint 15) tar seg av henting og cache, samme mønster. `server.js` er bare en ruter.
 - Innholdet ligger som ren JSON, så det kan flyttes til et større CMS senere.
 - Ingen npm-pakker og ingen rammeverk før det finnes et konkret behov.
 
@@ -184,7 +200,8 @@ Et enkelt, vedlikeholdsfritt CMS (offentlig nettside) for Lillesand Misjonskirke
 | Snarvei | Hvorfor den er greit nå | Må gjøres senere |
 |---|---|---|
 | Plassholdertekst på de faste sidene | Vi trenger noe å vise i MVP-en | PO legger inn ekte tekst via admin (3b) |
-| Mock er fortsatt standard (`MENIGHETSPLAN_API_URL` ikke satt) | Ekte API er bekreftet og kontrakten verifisert (punkt 10), men selve nettverkskallet er ikke testet av Claude (sandkasse blokkerer utgående kall) | PO setter miljøvariabelen lokalt og bekrefter ekte data på forsiden |
+| Mock er fortsatt standard for arrangementer OG grupper | **Oppdatert 2026-09-29:** ikke lenger «bare ikke testet ennå» — Claude har nå verifisert (curl + ekte nettleser) at Cloud Run-URL-en krever Google-innlogging, altså faktisk utilgjengelig utenfra slik den er konfigurert i dag | PO/GAIS må sette Cloud Run til anonym tilgang (eller gi en ny URL), deretter sette `MENIGHETSPLAN_API_URL`/`MENIGHETSPLAN_GRUPPER_API_URL` og bekrefte ekte data lokalt |
+| Grupper vises kun med mock-data (Sprint 15) | Samme årsak som raden over — `/api/public/all` er restriksjonen opphevet av PO, men praktisk talt utilgjengelig nå | Samme fiks som raden over løser begge |
 | Nye felt på `Gathering` finnes bare i app-sandkassen | Appen endres ikke via AI Studio nå | Få feltene inn i den ekte appen |
 | Egen enkel tekstmarkering (`##`, `-`) i stedet for en redigerer | Fungerer, og lagres som blokker | Erstattes av en blokkredigerer |
 | Fillagring uten låsing og historikk | Én redaktør på localhost | Database eller ferdig CMS |

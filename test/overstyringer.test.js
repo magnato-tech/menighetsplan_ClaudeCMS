@@ -210,6 +210,30 @@ describe('Overstyringer', () => {
     });
   });
 
+  describe('settBilde', () => {
+    test('lagrer bilde-filnavn for en uid', async () => {
+      const ny = await overstyringer.settBilde('bilde-1', 'abc12345.jpg');
+      assert.equal(ny.bilde, 'abc12345.jpg');
+      const hentet = await overstyringer.hentForUid('bilde-1');
+      assert.equal(hentet.bilde, 'abc12345.jpg');
+    });
+
+    test('bevarer fremhevet-status når bilde settes', async () => {
+      await overstyringer.settOverstyring('bilde-2', { fremhevet: true, skjult: false });
+      await overstyringer.settBilde('bilde-2', 'def67890.png');
+      const hentet = await overstyringer.hentForUid('bilde-2');
+      assert.equal(hentet.fremhevet, true);
+      assert.equal(hentet.bilde, 'def67890.png');
+    });
+
+    test('null fjerner bildet, og hele oppføringen hvis ellers false', async () => {
+      await overstyringer.settBilde('bilde-3', 'ghi11111.jpg');
+      await overstyringer.settBilde('bilde-3', null);
+      const hentet = await overstyringer.hentForUid('bilde-3');
+      assert.equal(hentet, null);
+    });
+  });
+
   test('cleanup – slett midlertidig mappe', async () => {
     await rm(tmpDir, { recursive: true });
   });

@@ -1,3 +1,4 @@
 node_modules/
 innhold/cache/siste-vellykkede.json
+innhold/cache/siste-vellykkede-grupper.json
 .claude/scheduled_tasks.lock

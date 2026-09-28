@@ -66,5 +66,11 @@
       "tagger": [{ "kategori": "Type", "verdi": "Konsert" }],
       "sistEndret": "2026-09-22T12:00:00Z"
     }
+  ],
+  "grupper": [
+    { "id": "group-lyd", "navn": "Lyd og bilde", "kategori": "tjenestegruppe", "beskrivelse": "Lydteknikere og bildefolk som sørger for god lyd og bilde på gudstjenester og arrangement." },
+    { "id": "group-kaffe", "navn": "Kirkekaffe & vertskap", "kategori": "tjenestegruppe", "beskrivelse": "Medarbeidere og vertskap som sørger for kaffe, servering og et varmt velkommen etter gudstjenesten." },
+    { "id": "group-barn", "navn": "Søndagsskole & barn", "kategori": "tjenestegruppe", "beskrivelse": "Medarbeidere til søndagsskolen som gir barna en trygg og god samling under gudstjenesten." },
+    { "id": "group-hus-1", "navn": "Husfellesskap Sentrum", "kategori": "husgruppe", "beskrivelse": "Samles annenhver uke i et hjem i sentrum til fellesskap, samtale og bønn." }
   ]
 }

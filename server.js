@@ -6,22 +6,28 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { lagOpprettArrangementer } from './lib/arrangementer.js';
+import { lagOpprettGrupper } from './lib/grupper.js';
 import { lagOpprettLager } from './lib/innhold/lager.js';
 import { lagOpprettOverstyringer } from './lib/innhold/overstyringer.js';
 import { lagOpprettOmdirigeringer } from './lib/innhold/omdirigeringer.js';
 import { lagOpprettBilder } from './lib/innhold/bilder.js';
 import { renderForside } from './lib/visning/forside.js';
 import { renderSide } from './lib/visning/side.js';
+import { renderBliMed } from './lib/visning/bli-med.js';
 import { renderDebug } from './lib/visning/debug.js';
 import { handleAdmin } from './lib/admin/index.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PORT = +(process.env.PORT || 3000);
 const KILDE_URL = process.env.MENIGHETSPLAN_API_URL || `http://localhost:${PORT}/mock/api/offentlig/arrangementer`;
+// /api/public/all er restriksjonen PO opphevet 2026-09-29 (se CLAUDE.md punkt 14) – men det ekte
+// endepunktet krever i dag Google-innlogging (funn samme dag), så mock er fortsatt standard.
+const KILDE_URL_GRUPPER = process.env.MENIGHETSPLAN_GRUPPER_API_URL || `http://localhost:${PORT}/mock/api/public/all`;
 const ADMIN_PASSORD = process.env.ADMIN_PASSORD || 'admin';
 
 // Initialisering
 const arrangementer = lagOpprettArrangementer(ROOT, KILDE_URL);
+const grupper = lagOpprettGrupper(ROOT, KILDE_URL_GRUPPER);
 const lager = lagOpprettLager(path.join(ROOT, 'innhold'));
 const overstyringer = lagOpprettOverstyringer(path.join(ROOT, 'innhold'));
 const omdirigeringer = lagOpprettOmdirigeringer(path.join(ROOT, 'innhold'));
@@ -33,7 +39,7 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   try {
     // Mock API for Menighetsplan
-    if (url.pathname === '/mock/api/offentlig/arrangementer') {
+    if (url.pathname === '/mock/api/offentlig/arrangementer' || url.pathname === '/mock/api/public/all') {
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       return res.end(await readFile(path.join(ROOT, 'data', 'menighetsplan-mock.json')));
     }
@@ -90,6 +96,16 @@ const server = http.createServer(async (req, res) => {
       return res.end(html);
     }
 
+    // Bli med (tjenestegrupper og husfellesskap)
+    if (url.pathname === '/bli-med') {
+      if (url.searchParams.has('oppdater')) await grupper.refresh();
+      const data = grupper.hentData();
+      const menySider = await lager.listSider();
+      const html = renderBliMed(data, menySider);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
+    }
+
     // Debug-side
     if (url.pathname === '/debug') {
       if (url.searchParams.has('oppdater')) await arrangementer.refresh();
@@ -103,7 +119,7 @@ const server = http.createServer(async (req, res) => {
 
     // Admin-ruter
     if (url.pathname.startsWith('/admin')) {
-      return handleAdmin(req, res, url, lager, overstyringer, arrangementer, bilder, ADMIN_PASSORD);
+      return handleAdmin(req, res, url, lager, overstyringer, arrangementer, bilder, ADMIN_PASSORD, grupper);
     }
 
     // Faste sider
@@ -141,6 +157,8 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, async () => {
   console.log(`Lillesand Misjonskirke CMS kjører på http://localhost:${PORT}`);
   await arrangementer.refresh();
+  await grupper.refresh();
   const REFRESH_MIN = +(process.env.REFRESH_MINUTES || 15);
   setInterval(() => arrangementer.refresh(), REFRESH_MIN * 60000);
+  setInterval(() => grupper.refresh(), REFRESH_MIN * 60000);
 });

@@ -71,3 +71,30 @@ test('Menighetsplan-API: defensiv sjekk – ekskluderer eksplisitt isPublic: fal
   assert.equal(r.forekomster[0].uid, 'public');
   assert.equal(r.forekomster[1].uid, 'no-field');
 });
+
+test('Menighetsplan-API: tolkGrupper leser grupper korrekt', () => {
+  const grupperMock = JSON.stringify({ versjon: 1, grupper: [
+    { id: 'group-lyd', navn: 'Lyd og bilde', kategori: 'tjenestegruppe', beskrivelse: 'Lydteknikere og bildefolk.' },
+    { id: 'group-hus-1', navn: 'Husfellesskap Sentrum', kategori: 'husgruppe', beskrivelse: 'Samles annenhver uke.' },
+  ] });
+  const r = mp.tolkGrupper(grupperMock);
+  assert.equal(r.antall, 2);
+  assert(r.grupper.find(g => g.kategori === 'tjenestegruppe'));
+  assert(r.grupper.find(g => g.kategori === 'husgruppe'));
+});
+
+test('Menighetsplan-API: tolkGrupper hopper over oppføringer som mangler id/navn/kategori', () => {
+  const r = mp.tolkGrupper(JSON.stringify({ versjon: 1, grupper: [
+    { id: 'g1', navn: 'Gyldig', kategori: 'tjenestegruppe', beskrivelse: 'Ok' },
+    { navn: 'Mangler id', kategori: 'tjenestegruppe' },
+    { id: 'g3', kategori: 'tjenestegruppe' },
+    { id: 'g4', navn: 'Mangler kategori' },
+  ] }));
+  assert.equal(r.grupper.length, 1);
+  assert.equal(r.grupper[0].navn, 'Gyldig');
+});
+
+test('Menighetsplan-API: tolkGrupper gir tydelig feil når nøkkelen mangler', () => {
+  assert.throws(() => mp.tolkGrupper(JSON.stringify({ versjon: 1 })), /mangler listen.*grupper/i);
+  assert.throws(() => mp.tolkGrupper(JSON.stringify({ versjon: 1, grupper: null })), /mangler listen.*grupper/i);
+});
