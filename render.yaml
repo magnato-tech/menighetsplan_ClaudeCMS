@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: menighetsplan-cms
+    runtime: node
+    plan: starter
+    buildCommand: "true" # ingen npm-avhengigheter å installere (se CLAUDE.md punkt 4/11)
+    startCommand: "node server.js"
+    envVars:
+      - key: ADMIN_PASSORD
+        sync: false # settes manuelt i Render Dashboard, aldri i git
+      - key: MENIGHETSPLAN_API_URL
+        value: https://ais-dev-bpwtuilescw22tmh5zztaw-138177352715.europe-west3.run.app/api/offentlig/arrangementer
+    disk:
+      name: innhold-data
+      mountPath: /opt/render/project/src/innhold
+      sizeGB: 1

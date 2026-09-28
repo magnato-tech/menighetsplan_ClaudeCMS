@@ -170,7 +170,7 @@ Et enkelt, vedlikeholdsfritt CMS (offentlig nettside) for Lillesand Misjonskirke
 | API-et kjører på en dev-sandbox (Cloud Run), kan ha kald start / gå i dvale | Under aktiv utvikling, GAIS har bekreftet fallback til cache/mock dekker dette | Fast produksjons-URL når `lillesandmisjonskirke.no` settes i drift |
 | `innhold/arrangement-overstyringer.json` uten låsing/historikk (Sprint 5) | Samme klasse snarvei som sidelageret over — én redaktør på localhost | Database eller ferdig CMS, samtidig med sidelageret |
 | `innhold/omdirigeringer.json` er en tom tabell (Sprint 8) | De gamle eRedaktør-URL-ene er ikke kjent ennå | PO fyller inn `{ "/gammel-sti": "/ny-sti" }`-par når de er kjent |
-| Filbasert lagring generelt kjører ikke trygt på f.eks. Cloud Run (ephemeral filsystem) | Ikke aktuelt før hosting velges | Se svar om skyhosting: velg løsning med persistent lagring (VM eller PaaS med volum), eller bytt lagringslag |
+| ~~Filbasert lagring krever persistent disk~~ — **adressert 2026-09-28** | `render.yaml` (Sprint 9) definerer Render som PaaS med et persistent volum montert på `innhold/`, slik at sideinnhold/overstyringer/omdirigeringer overlever restart | PO oppretter selve Render-tjenesten (se punkt 14) — krever "Starter"-plan (betalt, disk finnes ikke på gratisplanen), ikke en kodeoppgave |
 
 ## 14. Praktisk
 
@@ -186,6 +186,15 @@ Et enkelt, vedlikeholdsfritt CMS (offentlig nettside) for Lillesand Misjonskirke
 - Fra Sprint 9 (2026-09-28) har repoet en `SessionStart`-hook (`.claude/hooks/session-start.sh` + `.claude/settings.json`) som gjør at fjernøkter starter rent. Prosjektet har ingen npm-avhengigheter, så hooken bare bekrefter at Node.js ≥20 er tilgjengelig.
 - Brukes **kun** når PO jobber fra mobil, for å nyttiggjøre tildelte agent-tokens der — ikke standard arbeidsform. Windows-arbeidsflyten over gjelder ellers.
 - Samme repo, samme branch-regler (jf. punkt 2 om GitHub) — ingen egen gren eller avvikende prosess for mobiløkter.
+
+**Hosting — ekte URL (Sprint 9, 2026-09-28)**
+Claude kan ikke opprette skyressurser selv (ingen egne cloud-credentials). `render.yaml` i repo-roten er forberedt for [Render](https://render.com), valgt fordi det kobles direkte mot GitHub, krever ingen serveradministrasjon, og støtter et persistent volum (løser filsystem-problemet i gjeldsloggen, punkt 13). PO gjør selv, ca. 10 minutter:
+1. Opprett gratis konto på render.com, koble til GitHub-kontoen (`magnato-tech`).
+2. "New +" → "Blueprint" → velg `menighetsplan_ClaudeCMS`-repoet. Render leser `render.yaml` automatisk.
+3. **Viktig:** planen må være "Starter" (betalt, i dag rundt $7/mnd) — gratisplanen på Render støtter ikke persistent disk, og uten det forsvinner sideinnhold/overstyringer ved hver omstart.
+4. Sett miljøvariabelen `ADMIN_PASSORD` i Render Dashboard (den er bevisst *ikke* i `render.yaml`, skal aldri i git).
+5. Deploy — Render gir en ekte URL på formen `https://menighetsplan-cms.onrender.com`, nåbar fra mobil og alle andre steder.
+- Egen custom-domene (`lillesandmisjonskirke.no`) kobles på senere, når CMS-et faktisk skal erstatte eRedaktør (punkt 1/3).
 
 ## 15. Kvalitetsgjennomgang, natt til 2026-09-28/29 (etter Sprint 4–6)
 PO ba Claude fortsette selvstendig i flere sprinter samme kveld («jobb i sprinter, test, planlegg og fortsett selvstendig til du går tom for tokens»), som et bevisst, eksplisitt unntak fra regelen i punkt 7 om én ny økt per sprint — gjort for å bruke kvelden effektivt mens PO var borte. Etter Sprint 4–6 kjørte Claude selv (ikke en agent) en 8-vinklers kodegjennomgang av alt som var bygget, siden mye var skrevet av flere Haiku-agenter på rad uten menneskelig blikk innimellom. Fem funnere kjørte parallelt; flere fant de samme problemene uavhengig av hverandre, som styrket tilliten til funnene.
