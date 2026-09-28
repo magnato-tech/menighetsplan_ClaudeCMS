@@ -166,7 +166,7 @@ Et enkelt, vedlikeholdsfritt CMS (offentlig nettside) for Lillesand Misjonskirke
 | Fillagring uten låsing og historikk | Én redaktør på localhost | Database eller ferdig CMS |
 | Admin med HTTP Basic Auth (Sprint 3b) | Sikkerhet er ikke viktig nå (PO) | Ekte innlogging og roller |
 | Den ekte appdatabasen (Firestore) sine egne regler er fortsatt åpne | Ikke lenger CMS-ets direkte problem siden vi går via API-et (punkt 6), men fortsatt en risiko for appen selv | Appens/GAIS sitt ansvar å lukke før produksjon |
-| GAIS har pushrettigheter til CMS-repoet (siden 2026-09-28) | GAIS avsluttet sitt arbeid 2026-09-28 (bekreftet: ingen force push skjedde, `master` uendret siden Claudes commit) — tilgangen står fortsatt, trolig unødvendig nå | PO vurderer å fjerne GitHub-tilgangen for GAIS |
+| ~~GAIS har pushrettigheter til CMS-repoet~~ — **løst 2026-09-28** | GAIS har selv bekreftet at de ikke vil pushe mer. Claude sjekket collaborator-listen på GitHub direkte: kun `magnato-tech` (eier) er oppført — ingen egen GAIS-konto med tilgang funnet der, så det er ingenting å fjerne på GitHub-siden. | Ingen videre handling nødvendig |
 | API-et kjører på en dev-sandbox (Cloud Run), kan ha kald start / gå i dvale | Under aktiv utvikling, GAIS har bekreftet fallback til cache/mock dekker dette | Fast produksjons-URL når `lillesandmisjonskirke.no` settes i drift |
 | `innhold/arrangement-overstyringer.json` uten låsing/historikk (Sprint 5) | Samme klasse snarvei som sidelageret over — én redaktør på localhost | Database eller ferdig CMS, samtidig med sidelageret |
 | `innhold/omdirigeringer.json` er en tom tabell (Sprint 8) | De gamle eRedaktør-URL-ene er ikke kjent ennå | PO fyller inn `{ "/gammel-sti": "/ny-sti" }`-par når de er kjent |
