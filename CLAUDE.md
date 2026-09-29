@@ -198,11 +198,18 @@ To PO-beslutninger tatt i forbindelse med opprydningen:
 - Ren CSS-endring i `felles.js`, ingen HTML-struktur rørt — ingen nye tester nødvendig, kun bekreftet at alle 147 eksisterende fortsatt er grønne.
 - Verifisert av Claude: `node --test` (147/147), egen diff-gjennomgang (ingen funn), skjermbilde i nettleserpanelet.
 
+**Sprint 19** ✅ Dynamisk kalendervisning på `/kalender` (174/174 tester grønne), del 4 — den siste og viktigste biten av «dynamisk kalender»-ønsket:
+- Ny månedsgrid-kalender (`lib/visning/kalender.js` + `kalender-side.js`), ren server-rendret HTML/CSS, ingen bibliotek. Uken starter mandag, viser hele uker (inkl. dager fra forrige/neste måned nedtonet), navigering via `?maned=YYYY-MM`-lenker (ingen JS nødvendig for navigering).
+- Arrangementer grupperes per kalenderdag i Europe/Oslo-tid, sortert kronologisk, gudstjenester får egen farge, «+N mer» ved mange arrangementer samme dag.
+- 27 nye tester dekker ukestart, skuddår, månedsgrenser, tidssone-gruppering og «i dag»-markering.
+- **Kodegjennomgang (second opinion, samme sprint):** Claude fant en reell, men latent, tidssone-sårbarhet — kalender-griddet bygges med serverens lokale Date-aritmetikk før konvertering til Oslo-tid ved oppslag. Fungerer riktig i dag (PO sin maskin står i Oslo-tid, Node resolver til `Europe/Oslo` lokalt), men ville gitt datoer forskjøvet én dag hvis serveren noensinne kjørte i en tidssone øst for Oslo. Rettet med `process.env.TZ = 'Europe/Oslo'` øverst i `server.js`, som gjør hele prosessen tidssone-trygg uavhengig av hvor den driftes.
+- Verifisert av Claude: `node --test` (174/174), grundig egen gjennomgang av dato-/ukelogikken (bekreftet korrekt uke-loop-terminering og at navigasjonslenkene er trygge mot XSS via `parseYearMonth`-valideringen i `server.js`), skjermbilde i nettleserpanelet (oktober 2026 starter korrekt på torsdag, gudstjenester/Høstbasar vises riktig), og en falsk alarm på mobilvisning avkreftet med `scrollWidth`-sjekk i konsollen (siden overflower ikke, kalenderen scroller riktig sidelengs i sin egen wrapper).
+
 ## 11. Kodestruktur og prinsipper for fleksibilitet (Sprint 3a)
 - `lib/innhold/lager.js`: eneste vei til lagret innhold (`listSider`, `hentSide`, `lagreSide`). Filbasert i dag (`innhold/sider/<slug>.json`). **Kan byttes mot en database uten at resten endres.**
 - `lib/visning/blokker.js`: register over blokktyper (`tekst`, `bilde` fra Sprint 12, `facebook` fra Sprint 13). En side er `{ slug, tittel, meny: { vis, rekkefolge }, blokker: [...], sistEndret }`. Nye innholdstyper, som kart, blir nye blokktyper på samme måte.
 - `lib/innhold/bilder.js`: lagring av opplastede bilder (`innhold/bilder/`), `lib/admin/multipart.js`: generisk multipart/form-data-parsing for filopplasting i admin.
-- `lib/visning/*`: layout (`felles.js`), `forside.js`, `side.js`, `bli-med.js` (Sprint 15), `debug.js`. `lib/arrangementer.js`/`lib/grupper.js` (Sprint 15) tar seg av henting og cache, samme mønster. `server.js` er bare en ruter.
+- `lib/visning/*`: layout (`felles.js`), `forside.js`, `side.js`, `bli-med.js` (Sprint 15), `kalender.js`/`kalender-side.js` (Sprint 19), `debug.js`. `lib/arrangementer.js`/`lib/grupper.js` (Sprint 15) tar seg av henting og cache, samme mønster. `server.js` er bare en ruter.
 - Innholdet ligger som ren JSON, så det kan flyttes til et større CMS senere.
 - Ingen npm-pakker og ingen rammeverk før det finnes et konkret behov.
 
@@ -239,6 +246,7 @@ PO ba om en «proff og moderne» retning (dynamisk hero, animerte bilder, dynami
 | `innhold/omdirigeringer.json` er en tom tabell (Sprint 8) | De gamle eRedaktør-URL-ene er ikke kjent ennå | PO fyller inn `{ "/gammel-sti": "/ny-sti" }`-par når de er kjent |
 | ~~Filbasert lagring krever persistent disk~~ — **adressert 2026-09-28** | `render.yaml` (Sprint 9) definerer Render som PaaS med et persistent volum montert på `innhold/`, slik at sideinnhold/overstyringer/omdirigeringer overlever restart | PO oppretter selve Render-tjenesten (se punkt 14) — krever "Starter"-plan (betalt, disk finnes ikke på gratisplanen), ikke en kodeoppgave |
 | Admin-tabellene (Sprint 11) krever sidelengs scrolling *inni* tabellen på smale skjermer for å nå Fremhev/Skjul-knappene | Layoutbruddet (hele siden ble for bred) er fikset — dette er finpuss, ikke en feil | Vurder en mer mobiltilpasset radlayout for admin-tabellene (f.eks. kort i stedet for tabell under en breddegrense) hvis det oppleves tungvint i praksis |
+| Kalenderen (Sprint 19) viser ikke avlyst-status visuelt (samme røde gjennomstreking som forsiden/admin bruker for avlyste arrangementer) | Ikke en del av opprinnelig sprint-omfang, kalenderen fungerer korrekt uten det | Vurder å legge til samme avlyst-styling som `renderEventRow`/admin-arrangementer bruker, hvis PO opplever det som forvirrende i praksis |
 
 ## 14. Praktisk
 

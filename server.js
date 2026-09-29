@@ -1,6 +1,12 @@
 // Lillesand Misjonskirke – CMS, Sprint 0-skjelett
 // Modularisert arkitektur: lib/arrangementer.js, lib/innhold/lager.js, lib/visning/*.js
 
+// Pinner prosessens lokale tidssone til Europe/Oslo, uansett hvor serveren driftes.
+// Kalenderlogikken (lib/visning/kalender.js) bygger datoer med lokal Date-aritmetikk
+// før den konverterer til Oslo-tid for oppslag - uten dette kunne datoer blitt forskjøvet
+// én dag hvis serveren noensinne kjører i en tidssone øst for Oslo (f.eks. UTC+3 eller mer).
+process.env.TZ = 'Europe/Oslo';
+
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -14,6 +20,8 @@ import { lagOpprettBilder } from './lib/innhold/bilder.js';
 import { renderForside } from './lib/visning/forside.js';
 import { renderSide } from './lib/visning/side.js';
 import { renderBliMed } from './lib/visning/bli-med.js';
+import { renderKalender } from './lib/visning/kalender-side.js';
+import { byggKalenderGrid, parseYearMonth, getCurrentYearMonth } from './lib/visning/kalender.js';
 import { renderDebug } from './lib/visning/debug.js';
 import { handleAdmin } from './lib/admin/index.js';
 
@@ -109,6 +117,50 @@ const server = http.createServer(async (req, res) => {
       const data = grupper.hentData();
       const menySider = await lager.listSider();
       const html = renderBliMed(data, menySider);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(html);
+    }
+
+    // Kalender (månedsvisning)
+    if (url.pathname === '/kalender') {
+      if (url.searchParams.has('oppdater')) await arrangementer.refresh();
+      const now = Date.now();
+      const to = now + 120 * 86400000;
+      const allData = arrangementer.hentData(now, to);
+
+      // Parse måned fra query parameter
+      let manedStr = url.searchParams.get('maned');
+      if (!manedStr) {
+        manedStr = getCurrentYearMonth(now);
+      }
+      const parsed = parseYearMonth(manedStr);
+      if (!parsed) {
+        // Invalid month, redirect to current
+        res.writeHead(302, { 'Location': `/kalender?maned=${getCurrentYearMonth(now)}` });
+        return res.end();
+      }
+
+      const { ar, maned } = parsed;
+
+      // Hent arrangementer for hele måneden (plus litt margin)
+      const monthStart = new Date(ar, maned - 1, 1);
+      const monthEnd = new Date(ar, maned, 0, 23, 59, 59, 999);
+      // Add margin for prev/next month days shown in grid
+      const from = new Date(monthStart);
+      from.setDate(from.getDate() - 7);
+      const till = new Date(monthEnd);
+      till.setDate(till.getDate() + 7);
+      const data = arrangementer.hentData(from.getTime(), till.getTime());
+
+      // Apply overstyringer (skjulte arrangementer)
+      const allOverstyringer = await overstyringer.hentAlle();
+      const filtered = data.forekomster.filter(o => !allOverstyringer[o.uid]?.skjult);
+
+      // Build calendar grid
+      const grid = byggKalenderGrid(ar, maned, filtered, now);
+
+      const menySider = await lager.listSider();
+      const html = renderKalender(grid, manedStr, menySider);
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       return res.end(html);
     }
