@@ -1,6 +1,6 @@
 # Prosjektdokument: Menighets-CMS
 
-*Sist oppdatert: 2026-09-29, etter Sprint 15. Neste: se punkt 10 — alt gjenstående krever nå PO (spesielt Cloud Run-tilgangen, se punkt 13).*
+*Sist oppdatert: 2026-09-29, etter Sprint 19 og det visuelle løftet (hero-karusell, CTA-rad, typografi/hover, dynamisk kalender — se punkt 12). Neste: se punkt 10 — det som gjenstår krever nå PO (ekte foto til heroen, Cloud Run-tilgangen, se punkt 13).*
 
 > **Ny økt? Start her:** Les dette dokumentet, så punkt 9–14. **Kjør ALLTID `git fetch && git log HEAD..origin/master` før du bygger videre** — en annen (cloud/mobil) økt kan ha pushet siden sist (jf. Sprint 14-hendelsen). Kjør neste sprint i punkt 10 uten å spørre om lov på forhånd, og rapporter til PO etterpå. Oppdater punkt 9 og 10 når sprinten er ferdig.
 
