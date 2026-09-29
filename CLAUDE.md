@@ -187,6 +187,11 @@ To PO-beslutninger tatt i forbindelse med opprydningen:
 - **Kodegjennomgang (second opinion, samme sprint):** Claude fant selv at hvit tekst med kun `text-shadow` var for dårlig lesbar mot de lyse SVG-bakgrunnene (bekreftet visuelt i nettleserpanelet). Rettet med en mørk gradient-overlay bak teksten (`.hero-content` i `felles.js`) før commit.
 - Verifisert av Claude: `node --test` (142/142), skjermbilde i nettleserpanelet før og etter kontrast-fiksen.
 
+**Sprint 17** ✅ CTA-rad på forsiden (147/147 tester grønne), del 2 av det visuelle løftet:
+- Tre klikkbare «neste steg»-kort rett under hero-karusellen (`renderCtaRow()` i `lib/visning/forside.js`): «Ny her?» → `/om-oss`, «Bli med i en tjeneste» → `/bli-med`, «Ta kontakt» → `/kontakt`. Bevisst holdt til sider som faktisk finnes — ingen oppdiktet «Gi en gave»-knapp uten betalingsløsning.
+- Hover-løft (`transform`/`box-shadow`) på kortene, samme type polish som research-rapporten anbefalte.
+- Verifisert av Claude: `node --test` (147/147), egen diff-gjennomgang (ingen funn), skjermbilde i nettleserpanelet.
+
 ## 11. Kodestruktur og prinsipper for fleksibilitet (Sprint 3a)
 - `lib/innhold/lager.js`: eneste vei til lagret innhold (`listSider`, `hentSide`, `lagreSide`). Filbasert i dag (`innhold/sider/<slug>.json`). **Kan byttes mot en database uten at resten endres.**
 - `lib/visning/blokker.js`: register over blokktyper (`tekst`, `bilde` fra Sprint 12, `facebook` fra Sprint 13). En side er `{ slug, tittel, meny: { vis, rekkefolge }, blokker: [...], sistEndret }`. Nye innholdstyper, som kart, blir nye blokktyper på samme måte.

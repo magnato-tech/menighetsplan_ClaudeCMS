@@ -139,3 +139,44 @@ describe('Hero carousel', () => {
     assert.match(html, /addEventListener.*click/);
   });
 });
+
+describe('Forside – CTA-rad', () => {
+  test('renderForside inneholder 3 CTA-kort', () => {
+    const data = { forekomster: [lagForekomst('a1')], state: {} };
+    const html = renderForside(data, [], 'alle', {});
+    const cardCount = (html.match(/class="cta-kort"/g) || []).length;
+    assert.equal(cardCount, 3, 'skal ha 3 CTA-kort');
+  });
+
+  test('CTA-kortene lenker til riktig steder', () => {
+    const data = { forekomster: [lagForekomst('a1')], state: {} };
+    const html = renderForside(data, [], 'alle', {});
+    assert.match(html, /href="\/om-oss"/);
+    assert.match(html, /href="\/bli-med"/);
+    assert.match(html, /href="\/kontakt"/);
+  });
+
+  test('CTA-kortene inneholder forventet tittel-tekst', () => {
+    const data = { forekomster: [lagForekomst('a1')], state: {} };
+    const html = renderForside(data, [], 'alle', {});
+    assert.match(html, /Ny her\?/);
+    assert.match(html, /Bli med i en tjeneste/);
+    assert.match(html, /Ta kontakt/);
+  });
+
+  test('CTA-kortene inneholder beskrivelsestekst', () => {
+    const data = { forekomster: [lagForekomst('a1')], state: {} };
+    const html = renderForside(data, [], 'alle', {});
+    assert.match(html, /Finn ut mer om oss og hva vi tror på/);
+    assert.match(html, /Se hvilke tjenestegrupper/);
+    assert.match(html, /Har du spørsmål\?/);
+  });
+
+  test('CTA-raden er plassert rett etter hero-karusellen', () => {
+    const data = { forekomster: [lagForekomst('a1')], state: {} };
+    const html = renderForside(data, [], 'alle', {});
+    const heroPos = html.indexOf('id="hero-carousel"');
+    const ctaPos = html.indexOf('class="cta-grid"');
+    assert(heroPos > -1 && ctaPos > -1 && heroPos < ctaPos, 'CTA skal komme etter hero');
+  });
+});
