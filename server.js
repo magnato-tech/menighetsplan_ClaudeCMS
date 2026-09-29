@@ -50,6 +50,13 @@ const server = http.createServer(async (req, res) => {
       return res.end(await readFile(path.join(ROOT, 'public', 'logo.svg')));
     }
 
+    // Hero carousel images
+    const heroMatch = url.pathname.match(/^\/hero-([123])\.svg$/);
+    if (heroMatch) {
+      res.writeHead(200, { 'Content-Type': 'image/svg+xml' });
+      return res.end(await readFile(path.join(ROOT, 'public', `hero-${heroMatch[1]}.svg`)));
+    }
+
     // Opplastede bilder
     const bildeMatch = url.pathname.match(/^\/bilder\/([a-z0-9]+\.(jpg|jpeg|png|webp|gif))$/i);
     if (bildeMatch) {

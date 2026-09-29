@@ -79,3 +79,63 @@ describe('Forside – Nyheter og aktuelt', () => {
     assert.doesNotMatch(html, /aktuelt-kort">\s*<img/);
   });
 });
+
+describe('Hero carousel', () => {
+  test('renderForside inneholder en hero-seksjon', () => {
+    const data = { forekomster: [lagForekomst('a1')], state: {} };
+    const html = renderForside(data, [], 'alle', {});
+    assert.match(html, /<div class="hero"/);
+    assert.match(html, /id="hero-carousel"/);
+  });
+
+  test('hero-seksjon inneholder minst 3 slides', () => {
+    const data = { forekomster: [lagForekomst('a1')], state: {} };
+    const html = renderForside(data, [], 'alle', {});
+    const slideCount = (html.match(/class="hero-slide/g) || []).length;
+    assert.equal(slideCount, 3, 'skal ha 3 hero-slides');
+  });
+
+  test('hero-slides inneholder bakgrunnbilder', () => {
+    const data = { forekomster: [lagForekomst('a1')], state: {} };
+    const html = renderForside(data, [], 'alle', {});
+    assert.match(html, /background-image: url\('\/hero-1\.svg'\)/);
+    assert.match(html, /background-image: url\('\/hero-2\.svg'\)/);
+    assert.match(html, /background-image: url\('\/hero-3\.svg'\)/);
+  });
+
+  test('hver slide har en tittel', () => {
+    const data = { forekomster: [lagForekomst('a1')], state: {} };
+    const html = renderForside(data, [], 'alle', {});
+    assert.match(html, /Velkommen til fellesskap/);
+    assert.match(html, /Gudstjeneste hver søndag/);
+    assert.match(html, /Bli med i menigheten/);
+  });
+
+  test('hero-seksjon inneholder dots for navigasjon', () => {
+    const data = { forekomster: [lagForekomst('a1')], state: {} };
+    const html = renderForside(data, [], 'alle', {});
+    assert.match(html, /<div class="hero-dots">.*?<div class="hero-dot/);
+    assert.match(html, /data-index="0".*?data-index="1".*?data-index="2"/s);
+  });
+
+  test('hero-seksjon inneholder navigasjonsknapper', () => {
+    const data = { forekomster: [lagForekomst('a1')], state: {} };
+    const html = renderForside(data, [], 'alle', {});
+    assert.match(html, /class="hero-nav prev"/);
+    assert.match(html, /class="hero-nav next"/);
+  });
+
+  test('første slide er aktiv som default', () => {
+    const data = { forekomster: [lagForekomst('a1')], state: {} };
+    const html = renderForside(data, [], 'alle', {});
+    assert.match(html, /<div class="hero-slide active"/);
+  });
+
+  test('hero-seksjon inneholder JavaScript for karusell', () => {
+    const data = { forekomster: [lagForekomst('a1')], state: {} };
+    const html = renderForside(data, [], 'alle', {});
+    assert.match(html, /id="hero-carousel"/);
+    assert.match(html, /setInterval.*5000/);
+    assert.match(html, /addEventListener.*click/);
+  });
+});

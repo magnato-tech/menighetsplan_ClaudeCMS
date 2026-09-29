@@ -181,6 +181,12 @@ To PO-beslutninger tatt i forbindelse med opprydningen:
 - Mock er fortsatt datakilden for grupper (se punkt 13 for hvorfor), samme status som arrangementer.
 - Verifisert av Claude: `node --test` (134/134), curl-flyt for grupper-parsing, og i nettleserpanelet: `/bli-med` viser alle fire mock-gruppene korrekt, full opplastingsflyt (ekte PNG → fremhevet arrangement får bildekort på forsiden → fjern bilde-avkrysning → forsvinner igjen). All testdata og det midlertidig opplastede testbildet ryddet bort etterpå (`arrangement-overstyringer.json` bekreftet `{}`, `innhold/bilder/` tom).
 
+**Sprint 16** ✅ Hero-karusell på forsiden (142/142 tester grønne), første del av det visuelle løftet fra punkt 12:
+- Selvroterende bildekarusell øverst på forsiden (`renderHero()` i `lib/visning/forside.js`): 3 slides, bytter hvert 5. sekund med fade-overgang, piler + prikker for manuell navigering. Ren vanilla JS (IIFE i en `<script>`-tag), ingen avhengigheter.
+- 3 abstrakte SVG-placeholder-bakgrunner (`public/hero-1.svg` til `hero-3.svg`, nye ruter i `server.js`) i menighetens fargepalett — IKKE ekte foto, se gjeldsloggen (punkt 13).
+- **Kodegjennomgang (second opinion, samme sprint):** Claude fant selv at hvit tekst med kun `text-shadow` var for dårlig lesbar mot de lyse SVG-bakgrunnene (bekreftet visuelt i nettleserpanelet). Rettet med en mørk gradient-overlay bak teksten (`.hero-content` i `felles.js`) før commit.
+- Verifisert av Claude: `node --test` (142/142), skjermbilde i nettleserpanelet før og etter kontrast-fiksen.
+
 ## 11. Kodestruktur og prinsipper for fleksibilitet (Sprint 3a)
 - `lib/innhold/lager.js`: eneste vei til lagret innhold (`listSider`, `hentSide`, `lagreSide`). Filbasert i dag (`innhold/sider/<slug>.json`). **Kan byttes mot en database uten at resten endres.**
 - `lib/visning/blokker.js`: register over blokktyper (`tekst`, `bilde` fra Sprint 12, `facebook` fra Sprint 13). En side er `{ slug, tittel, meny: { vis, rekkefolge }, blokker: [...], sistEndret }`. Nye innholdstyper, som kart, blir nye blokktyper på samme måte.
@@ -196,10 +202,19 @@ To PO-beslutninger tatt i forbindelse med opprydningen:
 - **Beslutningspunkt etter MVP:** PO bestemmer hva «avansert» skal bety, og om vi bygger videre selv eller flytter innholdet til et ferdig CMS. Innholdet skal kunne eksporteres uten tap.
 - **Foreløpig anbefaling fra Claude (ikke besluttet):** en blokkredigerer (i stil med Editor.js eller WordPress Gutenberg) som lagrer JSON-blokker, og ikke fri plassering av elementer eller en HTML-basert WYSIWYG-editor. Ferdige CMS vurderes ved beslutningspunktet: Payload, Directus, Sanity, Decap og WordPress.
 
+### Beslutningspunktet avgjort 2026-09-29: behold arkitekturen, legg til et visuelt lag
+PO ba om en «proff og moderne» retning (dynamisk hero, animerte bilder, dynamisk kalender), med referanse til søstermenighetenes nettsider og to store amerikanske menigheter. To parallelle research-agenter undersøkte dette (designinspirasjon fra referansesidene, og teknologivalg for headless CMS/plattformer):
+- **Design-funn:** Ingen av referansesidene (heller ikke de store amerikanske) bruker noe teknisk avansert. Mønstrene som går igjen: bildekarusell i hero, arrangementskort med bilde i stedet for tekstlister, en CTA-rad med «neste steg»-kort, en gjennomført fargepalett/typografi, og myke hover/scroll-effekter. Kingdom City sin løpende tekstbanner er det mest «levende» elementet observert, og selv det er ren CSS.
+- **Teknologi-funn:** Å bytte til et headless CMS (Sanity/Payload/Directus) eller en ferdig plattform (WordPress/Webflow/Squarespace) løser et problem vi ikke har (mangel på adminpanel), og skaper et vi bevisst har unngått — å duplisere Menighetsplan-data inn i et fremmed system, eller bygge en egen bro-plugin i et fremmed språk. GSAP er gratis siden 2025 og dekker animasjonsbehovet uten byggsteg.
+- **Beslutning (PO godkjente):** Behold dagens Node-arkitektur uendret. Bygg det visuelle løftet (karusell, bildekort, CTA-rad, farge/typografi, hover/scroll-animasjoner) som ren CSS/vanilla JS oppå eksisterende serverrendret HTML — ingen nye npm-avhengigheter, ingen rammeverk. Eneste unntak vurdert individuelt: et lite kalenderbibliotek (f.eks. FullCalendar) hvis en egen enkel månedsgrid-visning viser seg utilstrekkelig.
+- Dette var i utgangspunktet vurdert som en arkitektur-/strukturvalg-sprint (ville krevd Opus, jf. punkt 7), men siden konklusjonen ble «ikke endre arkitekturen» og ikke et valg mellom flere nye arkitekturer, gjennomføres det videre arbeidet i vanlige Sonnet-sprinter.
+- Se punkt 9/10 for sprintene som bygger dette ut.
+
 ## 13. Gjeldslogg (bevisste snarveier som må håndteres senere)
 | Snarvei | Hvorfor den er greit nå | Må gjøres senere |
 |---|---|---|
 | Plassholdertekst på de faste sidene | Vi trenger noe å vise i MVP-en | PO legger inn ekte tekst via admin (3b) |
+| Hero-karusellen (Sprint 16) bruker 3 oppdiktede SVG-illustrasjoner og placeholder-titler, ikke ekte foto | Vi har ingen ekte bilder av menigheten ennå | PO bytter ut `public/hero-1.svg`/`hero-2.svg`/`hero-3.svg` med ekte foto (samme filnavn, eller oppdater stiene i `lib/visning/forside.js`), og tekstene i `renderHero()` |
 | Mock er fortsatt standard for arrangementer OG grupper | **Oppdatert 2026-09-29:** ikke lenger «bare ikke testet ennå» — Claude har nå verifisert (curl + ekte nettleser) at Cloud Run-URL-en krever Google-innlogging, altså faktisk utilgjengelig utenfra slik den er konfigurert i dag | PO/GAIS må sette Cloud Run til anonym tilgang (eller gi en ny URL), deretter sette `MENIGHETSPLAN_API_URL`/`MENIGHETSPLAN_GRUPPER_API_URL` og bekrefte ekte data lokalt |
 | Grupper vises kun med mock-data (Sprint 15) | Samme årsak som raden over — `/api/public/all` er restriksjonen opphevet av PO, men praktisk talt utilgjengelig nå | Samme fiks som raden over løser begge |
 | Nye felt på `Gathering` finnes bare i app-sandkassen | Appen endres ikke via AI Studio nå | Få feltene inn i den ekte appen |
