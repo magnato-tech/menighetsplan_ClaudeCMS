@@ -12,6 +12,7 @@ import {
   getPrevMonth,
   getAarManed,
 } from '../lib/visning/kalender.js';
+import { renderKalender } from '../lib/visning/kalender-side.js';
 
 describe('Kalenderlogikk', () => {
   const baseEvent = (overrides = {}) => ({
@@ -295,5 +296,28 @@ describe('Kalenderlogikk', () => {
       assert.equal(result.manedNavn, 'Oktober');
       assert.equal(result.manedNavn[0], result.manedNavn[0].toUpperCase());
     });
+  });
+});
+
+describe('renderKalender – visning', () => {
+  test('avlyst arrangement vises gjennomstreket i kalenderen', () => {
+    const forekomster = [{
+      uid: 'a1', summary: 'Høstbasar', startUtc: Date.parse('2026-10-24T12:00:00+02:00'),
+      status: 'AVLYST', erGudstjeneste: false,
+    }];
+    const grid = byggKalenderGrid(2026, 10, forekomster, Date.parse('2026-10-15T10:00:00Z'));
+    const html = renderKalender(grid, '2026-10', []);
+    assert.match(html, /kalender-hendelse avlyst/);
+    assert.match(html, /title="Avlyst: Høstbasar"/);
+  });
+
+  test('ikke-avlyst arrangement får ikke avlyst-klasse', () => {
+    const forekomster = [{
+      uid: 'a2', summary: 'Gudstjeneste', startUtc: Date.parse('2026-10-04T11:00:00+02:00'),
+      status: 'BEKREFTET', erGudstjeneste: true,
+    }];
+    const grid = byggKalenderGrid(2026, 10, forekomster, Date.parse('2026-10-15T10:00:00Z'));
+    const html = renderKalender(grid, '2026-10', []);
+    assert.doesNotMatch(html, /class="kalender-hendelse[^"]*avlyst/);
   });
 });
