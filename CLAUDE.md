@@ -192,6 +192,12 @@ To PO-beslutninger tatt i forbindelse med opprydningen:
 - Hover-løft (`transform`/`box-shadow`) på kortene, samme type polish som research-rapporten anbefalte.
 - Verifisert av Claude: `node --test` (147/147), egen diff-gjennomgang (ingen funn), skjermbilde i nettleserpanelet.
 
+**Sprint 18** ✅ Typografi og konsekvent hover-polish (147/147 tester grønne, ren CSS), del 3:
+- Større/fetere overskrifter (`header h1`, `h2`, `h3`) for et sterkere merkevareinntrykk.
+- Samme hover-løft (`translateY(-2px)` + skygge) som CTA-kortene allerede hadde, lagt til konsekvent på `.event-row`, `.service-card`, `.gruppe-kort` og `.aktuelt-kort` — ingen korttype skiller seg lenger ut.
+- Ren CSS-endring i `felles.js`, ingen HTML-struktur rørt — ingen nye tester nødvendig, kun bekreftet at alle 147 eksisterende fortsatt er grønne.
+- Verifisert av Claude: `node --test` (147/147), egen diff-gjennomgang (ingen funn), skjermbilde i nettleserpanelet.
+
 ## 11. Kodestruktur og prinsipper for fleksibilitet (Sprint 3a)
 - `lib/innhold/lager.js`: eneste vei til lagret innhold (`listSider`, `hentSide`, `lagreSide`). Filbasert i dag (`innhold/sider/<slug>.json`). **Kan byttes mot en database uten at resten endres.**
 - `lib/visning/blokker.js`: register over blokktyper (`tekst`, `bilde` fra Sprint 12, `facebook` fra Sprint 13). En side er `{ slug, tittel, meny: { vis, rekkefolge }, blokker: [...], sistEndret }`. Nye innholdstyper, som kart, blir nye blokktyper på samme måte.
