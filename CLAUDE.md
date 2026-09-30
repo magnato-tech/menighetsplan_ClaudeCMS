@@ -376,4 +376,15 @@ Alt seedes reproduserbart via `npm run seed` (utvidet, ikke separate engangsskri
 - **Biforbedring:** trakk ut duplisert `fmtDatoTid`-funksjon (fantes identisk i tre filer) til ny delt `src/lib/format.ts`.
 - Verifisert: `npx tsc --noEmit` (0 feil), `npm run test` (51/51 grønt), og en midlertidig testside opprettet direkte via Payloads lokale API med alle fire blokktyper i bruk samtidig — screenshottet på desktop og mobil (ingen JS-feil i konsollen, video-embed-URL korrekt utledet, kalenderblokk viste riktig antall rader, kolonner side-ved-side på desktop/stablet på mobil), og admin-redigeringssiden sjekket direkte (alle fire blokkene vises og redigeres korrekt med norske feltnavn). Testsiden slettet igjen etter verifisering — ingen testdata latt igjen.
 
+**Neste steg (før neste avsnitt):** ekte autentisering (fortsatt bevisst utsatt til PO er hjemme), ekte Vipps/kontaktinfo i placeholder-innholdet, og å verifisere Render-oppsettet.
+
+**Statistikk og diagram på admin-dashboardet (2026-09-30, samme dag) — PO ba om «statistikk og diagram for dashbordet»:**
+- Ny custom Payload-komponent `src/components/admin/Dashboard.tsx`, koblet inn via `admin.components.beforeDashboard` i `payload.config.ts` — vises øverst på `/admin`, over Payloads egen Collections/Globals-oversikt.
+- **Stat-tiles:** antall sider, kommende offentlige arrangementer, grupper, brukere.
+- **Oppgavestatus** som horisontale statusbarer (Bekreftet/Venter svar/Trenger vikar/Avlyst): farget med en fast statuspalett (grønn/oransje/rød/grå) + ikon+tekstlabel per rad — en statusfarge skal aldri bære mening alene.
+- **Aktiviteter per gruppe** som horisontale barer i én sekvensiell blåfarge (riktig fargejobb for en ren størrelsessammenligning — ikke kategorisk identitet, siden det bare er én måleverdi brutt ned per gruppe).
+- «Vis som tabell»-fallback (tilgjengelighet/WCAG) under hver graf, og eget mørk modus-uttrykk som matcher Payloads `data-theme`-attributt (verifisert med skjermbilde i begge moduser).
+- **Bevisst valg, samme prinsipp som blokktypene tidligere samme dag:** ingen ny npm-avhengighet (ikke Chart.js/Recharts) — bygget med ren HTML/CSS (prosentbredde-barer). Fargeverdiene er hentet direkte fra en ferdig validert referansepalett (fast statuspalett + sekvensiell blåramp fra prosjektets dataviz-metodikk), ikke en ny kombinasjon som måtte valideres på nytt.
+- Verifisert: `npx tsc --noEmit` (0 feil), `npm run test` (51/51 grønt), og innlogget i admin via Playwright — alle tall i stat-tiles og barer kontrollert mot databasen direkte, tabellvisning-fallback fungerer, og mørk modus gir fortsatt god kontrast/fargeskille.
+
 **Neste steg:** ekte autentisering (fortsatt bevisst utsatt til PO er hjemme), ekte Vipps/kontaktinfo i placeholder-innholdet, og å verifisere Render-oppsettet.
