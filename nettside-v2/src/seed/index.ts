@@ -388,7 +388,10 @@ async function main() {
       limit: 1,
     })
     if (docs.length === 0) {
-      await payload.create({ collection: 'gruppemeldinger', data: m })
+      await payload.create({
+        collection: 'gruppemeldinger',
+        data: { gruppe: m.gruppe as number, avsender: m.avsender as number, innhold: m.innhold },
+      })
     }
   }
 
@@ -420,7 +423,7 @@ async function main() {
       tittel: 'Gi',
       rekkefolge: 10,
       tekst:
-        'Din gave gjør en forskjell — både lokalt i Lillesand Misjonskirke og i misjonsarbeid ute i verden.\n\n[PLASSHOLDER — PO fyller inn ekte informasjon]\n\nVipps: #000000\nKontonummer: 0000.00.00000\n\nTakk for at du gir!',
+        'Din gave gjør en forskjell — både lokalt i Lillesand Misjonskirke og i misjonsarbeid ute i verden. Gaver går til drift av menigheten, diakonalt arbeid i Lillesand og faste misjonsprosjekter menigheten støtter.\n\n(Eksempeltekst — PO fyller inn ekte Vipps-nummer og kontonummer)\n\nVipps: #000000\nKontonummer: 0000.00.00000\n\nDu kan også gi fast hver måned ved å opprette en avtalegiro. Ta kontakt med kontoret for å sette dette opp.\n\nTakk for at du gir!',
     },
   ]
   const sideIder: Record<string, string | number> = {}
@@ -443,25 +446,28 @@ async function main() {
     sideIder[side.slug] = opprettet.id
   }
 
-  console.log('Sår undersider av Om oss (fløymk.no-inspirert struktur, placeholder-tekst)...')
+  console.log('Sår undersider av Om oss (fløymk.no-inspirert struktur, mockup-tekst)...')
   const omOssUndersider = [
     {
       slug: 'stab-og-lederskap',
       tittel: 'Stab og lederskap',
       rekkefolge: 1,
-      tekst: '[PLASSHOLDER] Her presenteres ansatte og lederskap i menigheten med navn, rolle og kontaktinfo.',
+      tekst:
+        '(Eksempeltekst — erstattes med ekte navn og bilder)\n\nKari Nordmann — Pastor\nkari.nordmann@eksempel.no · 912 34 567\n\nOla Hansen — Nestleder i lederskapet, ansvarlig for lyd og bilde\nola.hansen@eksempel.no · 987 65 432\n\nIngrid Berg — Leder for søndagsskolen\ningrid.berg@eksempel.no · 456 78 901\n\nMenighetens lederskap møtes jevnlig for å legge planer, følge opp menighetens drift og be for menigheten.',
     },
     {
       slug: 'bli-medlem',
       tittel: 'Bli medlem',
       rekkefolge: 2,
-      tekst: '[PLASSHOLDER] Informasjon om hvordan man blir medlem av Lillesand Misjonskirke, og hva medlemskap innebærer.',
+      tekst:
+        '(Eksempeltekst)\n\nAlle som deler menighetens tro og ønsker å høre til fellesskapet er velkomne som medlemmer.\n\nSlik blir du medlem:\n1. Ta kontakt med en av pastorene eller lederskapet\n2. Vi tar en uforpliktende samtale om tro og fellesskap\n3. Du blir presentert for menigheten på en gudstjeneste\n\nSom medlem får du stemmerett på årsmøtet, mulighet til å ta på deg tjenesteoppgaver, og en fast plass i fellesskapet.',
     },
     {
       slug: 'visjon-verdier-vedtekter',
       tittel: 'Visjon, verdier og vedtekter',
       rekkefolge: 3,
-      tekst: '[PLASSHOLDER] Menighetens visjon, kjerneverdier og lenke til vedtekter.',
+      tekst:
+        '(Eksempeltekst)\n\nVisjon: Vi vil at alle mennesker skal få del i livet Gud har for dem.\n\nVåre verdier:\n- Nåde — vi møter mennesker der de er\n- Fellesskap — vi vil vokse sammen, ikke alene\n- Tjeneste — vi bruker gavene våre til å bygge menigheten og hjelpe andre\n- Misjon — vi ser utover oss selv, lokalt og globalt\n\nMenighetens vedtekter er tilgjengelige hos lederskapet, og gjennomgås på det årlige årsmøtet.',
     },
   ]
   for (const u of omOssUndersider) {
@@ -493,7 +499,7 @@ async function main() {
         slug: 'vart-arbeid',
         visIMeny: true,
         rekkefolge: 4,
-        blokker: [{ blockType: 'tekst', innhold: richText('[PLASSHOLDER] Oversikt over menighetens ulike arbeidsgrener og tilbud.') }],
+        blokker: [{ blockType: 'tekst', innhold: richText('(Eksempeltekst) Lillesand Misjonskirke er et fellesskap med plass til alle aldre og livsfaser. Under finner du en oversikt over de faste tilbudene våre — gudstjenester, husgrupper og barne- og ungdomsarbeid.') }],
       },
     })
     vartArbeidId = opprettet.id as number
@@ -509,8 +515,20 @@ async function main() {
   }
 
   const vartArbeidUndersider = [
-    { slug: 'gudstjeneste', tittel: 'Gudstjeneste', rekkefolge: 2, tekst: '[PLASSHOLDER] Om gudstjenestene våre: tid, sted og hva som skjer.' },
-    { slug: 'husgrupper', tittel: 'Husgrupper', rekkefolge: 3, tekst: '[PLASSHOLDER] Om husgruppene/cellegruppene og hvordan man blir med.' },
+    {
+      slug: 'gudstjeneste',
+      tittel: 'Gudstjeneste',
+      rekkefolge: 2,
+      tekst:
+        '(Eksempeltekst)\n\nVi feirer gudstjeneste hver søndag kl. 11:00 i hovedsalen. Gudstjenesten varer omtrent 1,5 time og inneholder lovsang, bønn, en preken og — annenhver søndag — kirkekaffe etterpå.\n\nDet er søndagsskole for barna samtidig med gudstjenesten, og alle er velkomne, uansett bakgrunn eller om du er ny.\n\nSe kalenderen for kommende gudstjenester, temaer og eventuelle endringer.',
+    },
+    {
+      slug: 'husgrupper',
+      tittel: 'Husgrupper',
+      rekkefolge: 3,
+      tekst:
+        '(Eksempeltekst)\n\nHusgruppene er mindre fellesskap som møtes hjemme hos hverandre annenhver uke — til bibelsamtale, bønn og sosialt samvær. Dette er stedet der man virkelig blir kjent med hverandre.\n\nEksempel: Husfellesskap Sentrum møtes annenhver onsdag kl. 19:30, på omgang hjemme hos medlemmene.\n\nTa kontakt med kontoret eller lederskapet for å bli koblet på en husgruppe nær deg.',
+    },
   ]
   for (const u of vartArbeidUndersider) {
     const { docs } = await payload.find({ collection: 'sider', where: { slug: { equals: u.slug } }, limit: 1 })
