@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function LoggInnPage() {
   return (
     <div className="logg-inn-side">
@@ -5,6 +7,10 @@ export default function LoggInnPage() {
       <p>
         Innlogging for Min side og administrasjon kommer her. Ikke koblet til ekte autentisering
         ennå — dette er en plassholder i oppbyggingsfasen.
+      </p>
+      <p>
+        <Link href="/min-side">Se en forhåndsvisning av Min side</Link> (uten ekte innlogging — du
+        kan bytte hvilken bruker du ser siden som).
       </p>
     </div>
   )

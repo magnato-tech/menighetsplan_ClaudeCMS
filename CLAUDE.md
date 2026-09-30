@@ -270,9 +270,14 @@ PO ba Claude fortsette selvstendig i flere sprinter samme kveld («jobb i sprint
 - `/om-oss`, `/barn-og-unge`, `/kontakt` rendrer via `[slug]`-ruten, med ekte Lexical-brødtekst rendret via Payloads `RichText`-komponent (`@payloadcms/richtext-lexical/react`)
 - `/admin` laster Payloads fulle CMS-panel (200 OK)
 
+**Fortsatt av Claude autonomt (2026-09-30, natt), etter PO-instruks om å jobbe videre til morgenen:**
+- Bygget `/min-side` (`nettside-v2/src/app/(frontend)/min-side/page.tsx`) — en strukturell forhåndsvisning av Min side uten ekte innlogging ennå. En nedtrekksmeny lar deg velge hvilken seedet bruker du «ser siden som»; innholdet (Mine oppgaver, Mine grupper, Gruppeleder-oversikt med ledige oppgaver på tvers av egne grupper) vises basert på den valgte brukerens `roller`-felt. Har admin-/lederskap-rolle → siden viser i stedet en tydelig merknad om at denne brukeren i den ferdige løsningen ville gått rett til `/admin`.
+- `/logg-inn`-placeholderen lenker nå videre til `/min-side?som=...` som en «forhåndsvisning».
+- Verifisert av Claude: `curl /min-side` (200), testet med både admin-brukeren (tomme lister, admin-merknad vises) og gruppeleder-brukeren (`?som=2`: viser hennes oppgave «Lovsangsleder», begge gruppene hennes, og gruppeleder-oversikten viser riktig den ledige oppgaven «Tekniker (lyd/bilde)»).
+- **Viktig presisering for neste økt:** dette er en visningsmodell for å vise *formen* på Min side, ikke ekte tilgangskontroll — hvem som helst kan i dag bytte `?som=`-parameteren og se hvem som helst sin side. Ekte autentisering (se punkt under) må på plass før dette er reelt.
+
 **Ikke gjort ennå / bevisste snarveier i denne fasen:**
-- Ingen ekte autentisering/rollestyring — «Logg inn»-lenken går til en placeholder-side
-- Ingen `Min side`-visning bygget ennå (kun datamodellen som gjør det mulig)
+- Ingen ekte autentisering/rollestyring — `/min-side` er en visningsmodell uten tilgangskontroll (se over), «Logg inn»-lenken går fortsatt til en placeholder-side
 - Ingen migrering fra appens Firestore — bevisst utenfor scope nå (PO-beslutning)
 - Postgres kjører lokalt i denne økten (`service postgresql start` + rolle/database opprettet manuelt) — ikke satt opp for Render/produksjon ennå
 - `nettside-v2/CLAUDE.md` og `AGENTS.md` er auto-generert av Next.js selv (advarsel om at Next.js 16 har brytende endringer fra treningsdata) — ikke prosjektets egne, ikke rediger dem manuelt

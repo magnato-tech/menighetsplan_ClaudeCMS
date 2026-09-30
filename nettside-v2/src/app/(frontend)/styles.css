@@ -102,3 +102,35 @@ body {
 .tag-avlyst {
   background: #a33;
 }
+
+.tag-leder {
+  background: var(--rav);
+}
+
+.min-side .brukervelger {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  background: white;
+  padding: 0.8rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.min-side .rolle-info {
+  color: var(--dempet);
+  margin-bottom: 1.5rem;
+}
+
+.min-side section {
+  margin-bottom: 1.5rem;
+}
+
+.admin-varsel {
+  border-left: 4px solid var(--rav);
+}
+
+.aktivitetsliste form.forfall-stub {
+  margin-left: auto;
+}
