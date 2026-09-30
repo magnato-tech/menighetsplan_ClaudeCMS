@@ -1,0 +1,25 @@
+databases:
+  - name: nettside-db
+    plan: starter
+    databaseName: nettside
+    user: nettside
+
+services:
+  - type: web
+    name: lillesand-misjonskirke-nettside
+    runtime: node
+    plan: starter
+    rootDir: nettside-v2
+    buildCommand: "npm install && npm run build"
+    startCommand: "npm run start"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nettside-db
+          property: connectionString
+      - key: PAYLOAD_SECRET
+        sync: false # settes manuelt i Render Dashboard, aldri i git
+    disk:
+      name: media
+      mountPath: /opt/render/project/src/nettside-v2/media
+      sizeGB: 1

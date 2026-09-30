@@ -282,4 +282,10 @@ PO ba Claude fortsette selvstendig i flere sprinter samme kveld («jobb i sprint
 - Postgres kjører lokalt i denne økten (`service postgresql start` + rolle/database opprettet manuelt) — ikke satt opp for Render/produksjon ennå
 - `nettside-v2/CLAUDE.md` og `AGENTS.md` er auto-generert av Next.js selv (advarsel om at Next.js 16 har brytende endringer fra treningsdata) — ikke prosjektets egne, ikke rediger dem manuelt
 
-**Neste steg (fortsettes samme natt/økt der det er mulig):** bygge en enkel Min side-struktur (selv uten ekte auth, for å vise formen), og eventuelt sette opp Postgres + `render.yaml` for `nettside-v2` på samme måte som MVP-en hadde for hosting.
+**`nettside-v2/render.yaml` opprettet (2026-09-30, natt) — IKKE verifisert ved faktisk deploy:**
+- Definerer en Render-database (`nettside-db`, Postgres) og en web-tjeneste med `rootDir: nettside-v2` (repoet er nå et monorepo: MVP i roten, ny løsning i undermappe — samme mønster som Render støtter for monorepos, men Claude har ikke kunnet teste selve deploy-flyten)
+- `DATABASE_URL` kobles automatisk fra Render-databasen via `fromDatabase`, `PAYLOAD_SECRET` settes manuelt i Render Dashboard (aldri i git)
+- Persistent disk montert på `nettside-v2/media` (opplastede bilder)
+- **Usikkerhet PO må sjekke:** Render sin Blueprint-funksjon leter som standard etter `render.yaml` i repo-roten. Repoet har nå to `render.yaml`-filer (én i roten for MVP-en, én i `nettside-v2/` for den nye løsningen) — PO må undersøke i Render Dashboard om Blueprint-oppsettet lar deg peke til `nettside-v2/render.yaml` spesifikt, eller om filen må flyttes/omdøpes for å bli funnet. Ikke testet av Claude, som ikke har egne cloud-credentials (samme begrensning som alltid, jf. gammel punkt 14).
+
+**Neste steg:** alt gjenstående i denne fasen er nå enten PO-avhengig (verifisere Render-oppsettet i praksis) eller et bevisst valg om videre rekkefølge (ekte autentisering er trolig neste store byggeklosse siden `/min-side` i dag er en ubeskyttet visningsmodell, jf. presiseringen over).
