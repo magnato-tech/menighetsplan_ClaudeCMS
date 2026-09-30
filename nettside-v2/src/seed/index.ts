@@ -415,11 +415,22 @@ async function main() {
       tekst:
         'Har du spørsmål eller ønsker å komme i kontakt med oss? Vi setter pris på å høre fra deg.\n\nVi holder gudstjenester hver søndag kl. 11:00. Alle er velkomne!',
     },
+    {
+      slug: 'gi',
+      tittel: 'Gi',
+      rekkefolge: 10,
+      tekst:
+        'Din gave gjør en forskjell — både lokalt i Lillesand Misjonskirke og i misjonsarbeid ute i verden.\n\n[PLASSHOLDER — PO fyller inn ekte informasjon]\n\nVipps: #000000\nKontonummer: 0000.00.00000\n\nTakk for at du gir!',
+    },
   ]
+  const sideIder: Record<string, string | number> = {}
   for (const side of sider) {
     const { docs } = await payload.find({ collection: 'sider', where: { slug: { equals: side.slug } }, limit: 1 })
-    if (docs.length > 0) continue
-    await payload.create({
+    if (docs.length > 0) {
+      sideIder[side.slug] = docs[0].id
+      continue
+    }
+    const opprettet = await payload.create({
       collection: 'sider',
       data: {
         tittel: side.tittel,
@@ -427,6 +438,44 @@ async function main() {
         visIMeny: true,
         rekkefolge: side.rekkefolge,
         blokker: [{ blockType: 'tekst', innhold: richText(side.tekst) }],
+      },
+    })
+    sideIder[side.slug] = opprettet.id
+  }
+
+  console.log('Sår undersider av Om oss (fløymk.no-inspirert struktur, placeholder-tekst)...')
+  const omOssUndersider = [
+    {
+      slug: 'stab-og-lederskap',
+      tittel: 'Stab og lederskap',
+      rekkefolge: 1,
+      tekst: '[PLASSHOLDER] Her presenteres ansatte og lederskap i menigheten med navn, rolle og kontaktinfo.',
+    },
+    {
+      slug: 'bli-medlem',
+      tittel: 'Bli medlem',
+      rekkefolge: 2,
+      tekst: '[PLASSHOLDER] Informasjon om hvordan man blir medlem av Lillesand Misjonskirke, og hva medlemskap innebærer.',
+    },
+    {
+      slug: 'visjon-verdier-vedtekter',
+      tittel: 'Visjon, verdier og vedtekter',
+      rekkefolge: 3,
+      tekst: '[PLASSHOLDER] Menighetens visjon, kjerneverdier og lenke til vedtekter.',
+    },
+  ]
+  for (const u of omOssUndersider) {
+    const { docs } = await payload.find({ collection: 'sider', where: { slug: { equals: u.slug } }, limit: 1 })
+    if (docs.length > 0) continue
+    await payload.create({
+      collection: 'sider',
+      data: {
+        tittel: u.tittel,
+        slug: u.slug,
+        visIMeny: true,
+        rekkefolge: u.rekkefolge,
+        foreldreside: sideIder['om-oss'] as number,
+        blokker: [{ blockType: 'tekst', innhold: richText(u.tekst) }],
       },
     })
   }
