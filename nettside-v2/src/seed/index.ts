@@ -174,6 +174,16 @@ async function main() {
   )
 
   console.log('Sår aktiviteter (gudstjenester, arrangementer, gruppesamlinger)...')
+  // Datoene regnes ut relativt til kjøretidspunktet, slik at "Kommende arrangementer" på
+  // forsiden/kalenderen alltid viser fremtidige aktiviteter, uansett når npm run seed kjøres.
+  function fremtidigDato(dagerFraNaa: number, klokkeslett: string): string {
+    const d = new Date()
+    d.setUTCHours(0, 0, 0, 0)
+    d.setUTCDate(d.getUTCDate() + dagerFraNaa)
+    const [time, minutt] = klokkeslett.split(':').map(Number)
+    d.setUTCHours(time, minutt, 0, 0)
+    return d.toISOString()
+  }
   type AktData = {
     gruppe: string | number
     tittel: string
@@ -189,8 +199,8 @@ async function main() {
     {
       gruppe: gruppeHus.id,
       tittel: 'Husfellesskap hos Jonas',
-      start: '2026-09-09T19:30:00.000Z',
-      slutt: '2026-09-09T21:30:00.000Z',
+      start: fremtidigDato(16, '19:30'),
+      slutt: fremtidigDato(16, '21:30'),
       sted: 'Hos Jonas Lie (Skogveien 4)',
       type: 'gruppesamling',
       tema: 'Nåde og tilgivelse i hverdagen',
@@ -198,16 +208,16 @@ async function main() {
     {
       gruppe: gruppeLyd.id,
       tittel: 'Semesteroppstart & testkveld',
-      start: '2026-08-26T18:00:00.000Z',
-      slutt: '2026-08-26T20:00:00.000Z',
+      start: fremtidigDato(2, '18:00'),
+      slutt: fremtidigDato(2, '20:00'),
       sted: 'Hovedsalen',
       type: 'gruppesamling',
     },
     {
       gruppe: gruppeKaffe.id,
       tittel: 'Gudstjeneste & velkomstkaffe',
-      start: '2026-08-30T11:00:00.000Z',
-      slutt: '2026-08-30T13:00:00.000Z',
+      start: fremtidigDato(6, '11:00'),
+      slutt: fremtidigDato(6, '13:00'),
       sted: 'Hovedsalen og kafeen',
       type: 'arrangement',
       erGudstjeneste: true,
@@ -216,8 +226,8 @@ async function main() {
     {
       gruppe: gruppeKaffe.id,
       tittel: 'Gudstjeneste & dåp',
-      start: '2026-09-06T11:00:00.000Z',
-      slutt: '2026-09-06T13:00:00.000Z',
+      start: fremtidigDato(13, '11:00'),
+      slutt: fremtidigDato(13, '13:00'),
       sted: 'Hovedsalen og kafeen',
       type: 'arrangement',
       erGudstjeneste: true,
@@ -226,16 +236,16 @@ async function main() {
     {
       gruppe: gruppeBarn.id,
       tittel: 'Søndagsskole semesteroppstart',
-      start: '2026-09-06T11:15:00.000Z',
-      slutt: '2026-09-06T12:30:00.000Z',
+      start: fremtidigDato(13, '11:15'),
+      slutt: fremtidigDato(13, '12:30'),
       sted: 'Kjellersalen',
       type: 'arrangement',
     },
     {
       gruppe: gruppeLyd.id,
       tittel: 'Ungdomsmøte & lovsang',
-      start: '2026-09-11T19:00:00.000Z',
-      slutt: '2026-09-11T21:00:00.000Z',
+      start: fremtidigDato(18, '19:00'),
+      slutt: fremtidigDato(18, '21:00'),
       sted: 'Ungdomssalen',
       type: 'arrangement',
       offentlig: true,
@@ -243,8 +253,8 @@ async function main() {
     {
       gruppe: gruppeKaffe.id,
       tittel: 'Høstgudstjeneste & kirkelunsj',
-      start: '2026-09-13T11:00:00.000Z',
-      slutt: '2026-09-13T13:00:00.000Z',
+      start: fremtidigDato(20, '11:00'),
+      slutt: fremtidigDato(20, '13:00'),
       sted: 'Hovedsalen og kafeen',
       type: 'arrangement',
       erGudstjeneste: true,
@@ -253,16 +263,16 @@ async function main() {
     {
       gruppe: gruppeLyd.id,
       tittel: 'Lydteknisk opplæring & rigging',
-      start: '2026-09-22T19:00:00.000Z',
-      slutt: '2026-09-22T21:00:00.000Z',
+      start: fremtidigDato(29, '19:00'),
+      slutt: fremtidigDato(29, '21:00'),
       sted: 'Hovedsalen',
       type: 'gruppesamling',
     },
     {
       gruppe: gruppeLyd.id,
       tittel: 'Familiegudstjeneste & barnekor',
-      start: '2026-09-27T11:00:00.000Z',
-      slutt: '2026-09-27T12:30:00.000Z',
+      start: fremtidigDato(34, '11:00'),
+      slutt: fremtidigDato(34, '12:30'),
       sted: 'Hovedsalen',
       type: 'arrangement',
       erGudstjeneste: true,
@@ -275,7 +285,7 @@ async function main() {
     const bildeId = await lagPlaceholderBilde(payload, a.tittel)
     const { docs: eksisterendeAkt } = await payload.find({
       collection: 'aktiviteter',
-      where: { tittel: { equals: a.tittel }, start: { equals: a.start } },
+      where: { tittel: { equals: a.tittel } },
       limit: 1,
     })
     const data = {

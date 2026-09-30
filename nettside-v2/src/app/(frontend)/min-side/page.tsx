@@ -78,7 +78,7 @@ export default async function MinSidePage({
   const ubesvarteInnkallinger = alleAktiviteter.filter(
     (a) =>
       mineGrupper.some((g) => g.id === gruppeId(a.gruppe)) &&
-      new Date(a.start) >= new Date('2026-08-01') &&
+      new Date(a.start) >= new Date() &&
       !alleOppmoter.some((m) => gruppeId(m.aktivitet) === a.id && gruppeId(m.person) === valgtBruker.id),
   )
 
@@ -113,7 +113,7 @@ export default async function MinSidePage({
 
   const gruppekort = mineGrupper.map((g) => {
     const nesteAkt = alleAktiviteter
-      .filter((a) => gruppeId(a.gruppe) === g.id && new Date(a.start) >= new Date('2026-08-01'))
+      .filter((a) => gruppeId(a.gruppe) === g.id && new Date(a.start) >= new Date())
       .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())[0]
     const sisteMelding = alleMeldinger.find((m) => gruppeId(m.gruppe) === g.id)
     return {
