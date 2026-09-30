@@ -46,6 +46,7 @@ export default async function Nav() {
         </Link>
         <nav className="meny">
           <Link href="/">Hjem</Link>
+          <Link href="/kalender">Kalender</Link>
           {toppnivaSider.map((side) => {
             const barn = barnSider[side.id] || []
             if (barn.length === 0) {
