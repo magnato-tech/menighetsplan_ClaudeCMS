@@ -6,8 +6,8 @@ export const Aktiviteter: CollectionConfig = {
   admin: {
     useAsTitle: 'tittel',
     defaultColumns: ['tittel', 'gruppe', 'start', 'erGudstjeneste', 'avlyst'],
-    defaultSort: 'start',
   },
+  defaultSort: 'start',
   access: {
     read: () => true,
   },

@@ -6,8 +6,8 @@ export const GruppeMeldinger: CollectionConfig = {
   admin: {
     useAsTitle: 'innhold',
     defaultColumns: ['gruppe', 'avsender', 'createdAt'],
-    defaultSort: '-createdAt',
   },
+  defaultSort: '-createdAt',
   access: {
     read: () => true,
   },

@@ -25,7 +25,7 @@ export default async function SidePage({ params }: { params: Promise<{ slug: str
         if (blokk.blockType === 'tekst') {
           return (
             <div key={i} className="blokk-tekst">
-              <RichText data={blokk.innhold} />
+              {blokk.innhold && <RichText data={blokk.innhold} />}
             </div>
           )
         }

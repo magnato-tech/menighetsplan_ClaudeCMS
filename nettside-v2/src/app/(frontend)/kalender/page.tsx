@@ -1,6 +1,6 @@
 import { getPayload } from 'payload'
 import config from '@/payload.config'
-import type { Aktiviteter as Aktivitet } from '@/payload-types'
+import { grupperPerManed, sorterManedsnokler } from '@/lib/aktivitetStatus'
 import '../styles.css'
 
 function fmtDatoTid(iso: string) {
@@ -13,27 +13,6 @@ function fmtDatoTid(iso: string) {
     hour: '2-digit',
     minute: '2-digit',
   })
-}
-
-function fmtManedAr(iso: string) {
-  const d = new Date(iso)
-  const maaned = d.toLocaleString('nb-NO', { month: 'long', year: 'numeric' })
-  // Stor forbokstav på månedsnavn
-  return maaned.charAt(0).toUpperCase() + maaned.slice(1)
-}
-
-function grupperPerManed(aktiviteter: Aktivitet[]) {
-  const grupper: Record<string, Aktivitet[]> = {}
-
-  aktiviteter.forEach((a) => {
-    const nokkel = fmtManedAr(a.start)
-    if (!grupper[nokkel]) {
-      grupper[nokkel] = []
-    }
-    grupper[nokkel].push(a)
-  })
-
-  return grupper
 }
 
 export default async function KalenderPage() {
@@ -50,11 +29,7 @@ export default async function KalenderPage() {
   })
 
   const gruppert = grupperPerManed(aktiviteter)
-  const manedsrekkefolge = Object.keys(gruppert).sort((a, b) => {
-    const dateA = new Date(gruppert[a][0].start)
-    const dateB = new Date(gruppert[b][0].start)
-    return dateA.getTime() - dateB.getTime()
-  })
+  const manedsrekkefolge = sorterManedsnokler(gruppert)
 
   return (
     <div className="side-innhold">

@@ -1,5 +1,7 @@
 import { getPayload } from 'payload'
 import config from '@/payload.config'
+import { filtrerMineGrupper, finnLedetGrupper, finnRolleIGruppe, erGruppeleder as erGruppelederAvNoen } from '@/lib/gruppeLogikk'
+import { statusForAktivitet } from '@/lib/aktivitetStatus'
 import '../styles.css'
 
 function fmtDatoKort(iso: string) {
@@ -39,26 +41,12 @@ export default async function MinSidePage({
   }
 
   const { docs: alleGrupper } = await payload.find({ collection: 'grupper', limit: 100, depth: 1 })
-  const mineGrupper = alleGrupper.filter((g) => {
-    const idIn = (rel: unknown) =>
-      Array.isArray(rel) && rel.some((p) => (typeof p === 'object' ? p.id : p) === valgtBruker.id)
-    return idIn(g.medlemmer) || idIn(g.ledere) || idIn(g.varaledere)
-  })
-  const ledetGrupper = alleGrupper.filter((g) => {
-    const idIn = (rel: unknown) =>
-      Array.isArray(rel) && rel.some((p) => (typeof p === 'object' ? p.id : p) === valgtBruker.id)
-    return idIn(g.ledere) || idIn(g.varaledere)
-  })
-  const rolleIGruppe = (g: (typeof alleGrupper)[number]) => {
-    const idIn = (rel: unknown) =>
-      Array.isArray(rel) && rel.some((p) => (typeof p === 'object' ? p.id : p) === valgtBruker.id)
-    if (idIn(g.ledere)) return 'Leder'
-    if (idIn(g.varaledere)) return 'Nestleder'
-    return 'Medlem'
-  }
+  const mineGrupper = filtrerMineGrupper(alleGrupper, valgtBruker.id)
+  const ledetGrupper = finnLedetGrupper(alleGrupper, valgtBruker.id)
+  const rolleIGruppe = (g: (typeof alleGrupper)[number]) => finnRolleIGruppe(g, valgtBruker.id)
 
   const erAdmin = valgtBruker.globalRolle === 'admin'
-  const erGruppeleder = ledetGrupper.length > 0
+  const erGruppeleder = erGruppelederAvNoen(alleGrupper, valgtBruker.id)
   const tilgjengeligeFaner: Fane[] = ['medlem', ...(erGruppeleder ? (['gruppeleder'] as const) : []), ...(erAdmin ? (['admin'] as const) : [])]
   const aktivFane: Fane = (faneParam as Fane) && tilgjengeligeFaner.includes(faneParam as Fane) ? (faneParam as Fane) : 'medlem'
 
@@ -73,18 +61,6 @@ export default async function MinSidePage({
   })
 
   const gruppeId = (rel: unknown) => (typeof rel === 'object' && rel ? (rel as { id: string | number }).id : rel)
-
-  function statusForAktivitet(aktId: string | number) {
-    const oppgaver = alleOppgaver.filter((o) => gruppeId(o.aktivitet) === aktId)
-    if (oppgaver.length === 0) return null
-    const harTrukket = alleTildelinger.some(
-      (t) => oppgaver.some((o) => o.id === gruppeId(t.oppgave)) && t.svar === 'withdrawn',
-    )
-    if (harTrukket) return { label: 'Forfall', klasse: 'tag-forfall' }
-    const antallLedige = oppgaver.filter((o) => o.status === 'vacant' || o.status === 'open').length
-    if (antallLedige > 0) return { label: `Mangler ${antallLedige}`, klasse: 'tag-mangler' }
-    return { label: 'Dekket', klasse: 'tag-dekket' }
-  }
 
   // Min side (medlem)
   const handlingskortMedlem = (() => {
@@ -106,14 +82,17 @@ export default async function MinSidePage({
       gruppe: g,
       rolle: rolleIGruppe(g),
       nesteAkt,
-      nesteAktStatus: nesteAkt ? statusForAktivitet(nesteAkt.id) : null,
+      nesteAktStatus: nesteAkt ? statusForAktivitet(nesteAkt.id, alleOppgaver, alleTildelinger) : null,
       sisteMelding,
     }
   })
 
   // Gruppeleder
   const aktiviteterLedetGrupper = alleAktiviteter.filter((a) => ledetGrupper.some((g) => g.id === gruppeId(a.gruppe)))
-  const aktiviteterMedStatus = aktiviteterLedetGrupper.map((a) => ({ akt: a, status: statusForAktivitet(a.id) }))
+  const aktiviteterMedStatus = aktiviteterLedetGrupper.map((a) => ({
+    akt: a,
+    status: statusForAktivitet(a.id, alleOppgaver, alleTildelinger),
+  }))
   const tellinger = {
     alle: aktiviteterMedStatus.length,
     forfall: aktiviteterMedStatus.filter((x) => x.status?.klasse === 'tag-forfall').length,
@@ -132,8 +111,9 @@ export default async function MinSidePage({
     (x) => x.status?.klasse === 'tag-mangler' || x.status?.klasse === 'tag-forfall',
   ).length
 
+  const brukerId = valgtBruker.id
   function faneUrl(f: Fane) {
-    return `/min-side?som=${valgtBruker.id}&fane=${f}`
+    return `/min-side?som=${brukerId}&fane=${f}`
   }
 
   return (
