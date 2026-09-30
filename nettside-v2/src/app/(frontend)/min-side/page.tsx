@@ -2,6 +2,7 @@ import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { filtrerMineGrupper, finnLedetGrupper, finnRolleIGruppe, erGruppeleder as erGruppelederAvNoen } from '@/lib/gruppeLogikk'
 import { statusForAktivitet } from '@/lib/aktivitetStatus'
+import { taOppgave, meldForfall, svarInnkalling } from '@/lib/handlinger'
 import '../styles.css'
 
 function fmtDatoKort(iso: string) {
@@ -59,19 +60,56 @@ export default async function MinSidePage({
     depth: 1,
     sort: '-createdAt',
   })
+  const { docs: alleOppmoter } = await payload.find({ collection: 'oppmoter', limit: 500, depth: 1 })
 
   const gruppeId = (rel: unknown) => (typeof rel === 'object' && rel ? (rel as { id: string | number }).id : rel)
 
-  // Min side (medlem)
-  const handlingskortMedlem = (() => {
-    const ledigeIMineGrupper = alleOppgaver.filter(
-      (o) => mineGrupper.some((g) => g.id === gruppeId(o.gruppe)) && (o.status === 'vacant' || o.status === 'open'),
-    ).length
-    const ventendeTildelinger = alleTildelinger.filter(
-      (t) => gruppeId(t.person) === valgtBruker.id && t.svar === 'pending',
-    ).length
-    return ledigeIMineGrupper + ventendeTildelinger
-  })()
+  // Min side (medlem) - Handlingskort: ledige oppgaver + venter på svar
+  const ledigeOppgaver = alleOppgaver.filter(
+    (o) => mineGrupper.some((g) => g.id === gruppeId(o.gruppe)) && (o.status === 'vacant' || o.status === 'open'),
+  )
+  const mineTildelinger = alleTildelinger.filter(
+    (t) => gruppeId(t.person) === valgtBruker.id && t.svar === 'pending',
+  )
+  const ledigeOppgaverMedAktivitet = ledigeOppgaver.map((o) => ({
+    oppgave: o,
+    aktivitet: alleAktiviteter.find((a) => a.id === gruppeId(o.aktivitet)),
+  }))
+  const ubesvarteInnkallinger = alleAktiviteter.filter(
+    (a) =>
+      mineGrupper.some((g) => g.id === gruppeId(a.gruppe)) &&
+      new Date(a.start) >= new Date('2026-08-01') &&
+      !alleOppmoter.some((m) => gruppeId(m.aktivitet) === a.id && gruppeId(m.person) === valgtBruker.id),
+  )
+
+  const handlinger = [
+    ...ledigeOppgaverMedAktivitet.map((x) => ({
+      type: 'ledig' as const,
+      ...x,
+    })),
+    ...mineTildelinger.map((t) => ({
+      type: 'venter' as const,
+      tildeling: t,
+      oppgave: alleOppgaver.find((o) => o.id === gruppeId(t.oppgave)),
+      aktivitet: alleAktiviteter.find((a) => a.id === gruppeId(alleOppgaver.find((o) => o.id === gruppeId(t.oppgave))?.aktivitet)),
+    })),
+    ...ubesvarteInnkallinger.map((a) => ({
+      type: 'innkalling' as const,
+      aktivitet: a,
+    })),
+  ]
+
+  const mineBekreftedeTildelinger = alleTildelinger
+    .filter((t) => gruppeId(t.person) === valgtBruker.id && t.svar === 'confirmed')
+    .map((t) => {
+      const oppgave = alleOppgaver.find((o) => o.id === gruppeId(t.oppgave))
+      return {
+        tildeling: t,
+        oppgave,
+        aktivitet: alleAktiviteter.find((a) => a.id === gruppeId(oppgave?.aktivitet)),
+      }
+    })
+    .filter((x) => x.oppgave)
 
   const gruppekort = mineGrupper.map((g) => {
     const nesteAkt = alleAktiviteter
@@ -152,11 +190,96 @@ export default async function MinSidePage({
 
       {aktivFane === 'medlem' && (
         <>
-          {handlingskortMedlem > 0 && (
+          {handlinger.length > 0 && (
             <section className="kort handlingskort">
               <span className="handlingskort-label">DETTE TRENGER DIN HANDLING</span>
-              <h2>{handlingskortMedlem} saker venter på deg</h2>
-              <p>Du har ubesvarte tildelinger eller ledige oppgaver i dine grupper.</p>
+              <h2>{handlinger.length} saker venter på deg</h2>
+              <div className="handlingskort-liste">
+                {handlinger.map((h) => {
+                  if (h.type === 'ledig') {
+                    return (
+                      <div key={`ledig-${h.oppgave.id}`} className="handlingskort-item">
+                        <div className="handlingskort-item-innhold">
+                          <span className="tag tag-trenger-vikar">TRENGER VIKAR</span>
+                          <p className="handlingskort-item-tittel">{h.oppgave.tittel}</p>
+                          {h.aktivitet && (
+                            <p className="handlingskort-item-aktivitet">
+                              {h.aktivitet.tittel} · {fmtDatoLang(h.aktivitet.start)}
+                            </p>
+                          )}
+                        </div>
+                        <form action={taOppgave} style={{ margin: 0 }}>
+                          <input type="hidden" name="oppgaveId" value={h.oppgave.id} />
+                          <input type="hidden" name="personId" value={valgtBruker.id} />
+                          <button type="submit">Ta oppgave</button>
+                        </form>
+                      </div>
+                    )
+                  } else if (h.type === 'venter') {
+                    return (
+                      <div key={`venter-${h.tildeling.id}`} className="handlingskort-item">
+                        <div className="handlingskort-item-innhold">
+                          <span className="tag tag-venter-svar">VENTER PÅ SVAR</span>
+                          <p className="handlingskort-item-tittel">{h.oppgave?.tittel}</p>
+                          {h.aktivitet && (
+                            <p className="handlingskort-item-aktivitet">
+                              {h.aktivitet.tittel} · {fmtDatoLang(h.aktivitet.start)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  } else {
+                    return (
+                      <div key={`innkalling-${h.aktivitet.id}`} className="handlingskort-item">
+                        <div className="handlingskort-item-innhold">
+                          <span className="tag tag-venter-svar">INNKALLING</span>
+                          <p className="handlingskort-item-tittel">{h.aktivitet.tittel}</p>
+                          <p className="handlingskort-item-aktivitet">{fmtDatoLang(h.aktivitet.start)}</p>
+                        </div>
+                        <form action={svarInnkalling} style={{ margin: 0, display: 'flex', gap: '0.4rem' }}>
+                          <input type="hidden" name="aktivitetId" value={h.aktivitet.id} />
+                          <input type="hidden" name="personId" value={valgtBruker.id} />
+                          <button type="submit" name="status" value="attending">
+                            Kommer
+                          </button>
+                          <button type="submit" name="status" value="declined" className="forfall">
+                            Kan ikke
+                          </button>
+                        </form>
+                      </div>
+                    )
+                  }
+                })}
+              </div>
+            </section>
+          )}
+
+          {mineBekreftedeTildelinger.length > 0 && (
+            <section className="kort">
+              <h2>Mine oppgaver ({mineBekreftedeTildelinger.length})</h2>
+              <div className="handlingskort-liste">
+                {mineBekreftedeTildelinger.map((x) => (
+                  <div key={`bekreftet-${x.tildeling.id}`} className="handlingskort-item">
+                    <div className="handlingskort-item-innhold">
+                      <span className="tag tag-dekket">BEKREFTET</span>
+                      <p className="handlingskort-item-tittel">{x.oppgave!.tittel}</p>
+                      {x.aktivitet && (
+                        <p className="handlingskort-item-aktivitet">
+                          {x.aktivitet.tittel} · {fmtDatoLang(x.aktivitet.start)}
+                        </p>
+                      )}
+                    </div>
+                    <form action={meldForfall} style={{ margin: 0 }}>
+                      <input type="hidden" name="tildelingId" value={x.tildeling.id} />
+                      <input type="hidden" name="oppgaveId" value={x.oppgave!.id} />
+                      <button type="submit" className="forfall">
+                        Meld forfall
+                      </button>
+                    </form>
+                  </div>
+                ))}
+              </div>
             </section>
           )}
 
@@ -190,6 +313,9 @@ export default async function MinSidePage({
                       <p>{sisteMelding.innhold}</p>
                     </div>
                   )}
+                  <a href={`/min-side/gruppe/${gruppe.id}?som=${valgtBruker.id}`} className="gruppekort-chat-lenke">
+                    Gå til gruppechat →
+                  </a>
                 </div>
               ))}
             </div>

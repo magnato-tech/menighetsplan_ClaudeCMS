@@ -413,3 +413,176 @@ body {
   color: var(--dempet);
   font-size: 0.9rem;
 }
+
+/* Gruppechat og handlinger */
+.gruppechat-header {
+  margin-bottom: 1.5rem;
+}
+
+.gruppechat-header a {
+  color: var(--sjo);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+.gruppechat-header a:hover {
+  text-decoration: underline;
+}
+
+.meldingsliste {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 1rem 0;
+  max-height: 60vh;
+  overflow-y: auto;
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.melding {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  max-width: 80%;
+  align-self: flex-start;
+}
+
+.melding-egen {
+  background: var(--sjo);
+  color: white;
+  align-self: flex-end;
+}
+
+.melding-avsender {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+  margin-bottom: 0.3rem;
+}
+
+.melding-innhold {
+  margin: 0.3rem 0;
+  line-height: 1.4;
+}
+
+.melding-tid {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  margin-top: 0.3rem;
+}
+
+.send-melding-skjema {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.send-melding-skjema input[type="text"] {
+  flex: 1;
+  padding: 0.6rem;
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  font-family: system-ui, sans-serif;
+}
+
+.send-melding-skjema button {
+  background: var(--sjo);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.send-melding-skjema button:hover {
+  background: #163a4a;
+}
+
+.gruppekort-chat-lenke {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--sjo);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.gruppekort-chat-lenke:hover {
+  text-decoration: underline;
+}
+
+.handlingskort-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
+
+.handlingskort-item {
+  background: white;
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.handlingskort-item-innhold {
+  flex: 1;
+}
+
+.handlingskort-item-tittel {
+  font-weight: 600;
+  margin: 0 0 0.3rem;
+}
+
+.handlingskort-item-aktivitet {
+  font-size: 0.85rem;
+  color: var(--dempet);
+  margin: 0;
+}
+
+.handlingskort-item form {
+  margin: 0;
+}
+
+.handlingskort-item form button {
+  background: #2e8b57;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.handlingskort-item form button:hover {
+  background: #237a47;
+}
+
+.handlingskort-item form button.forfall {
+  background: #c0392b;
+}
+
+.handlingskort-item form button.forfall:hover {
+  background: #a93226;
+}
+
+.tag-trenger-vikar {
+  background: #d68910;
+}
+
+.tag-venter-svar {
+  background: #7a8c93;
+}
