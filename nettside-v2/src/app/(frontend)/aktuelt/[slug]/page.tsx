@@ -13,6 +13,7 @@ export default async function NyhetPage({ params }: { params: Promise<{ slug: st
     collection: 'nyheter',
     where: { slug: { equals: slug } },
     limit: 1,
+    overrideAccess: false,
   })
 
   const nyhet = docs[0]

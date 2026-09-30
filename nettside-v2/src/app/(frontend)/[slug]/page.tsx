@@ -15,6 +15,7 @@ export default async function SidePage({ params }: { params: Promise<{ slug: str
     collection: 'sider',
     where: { slug: { equals: slug } },
     limit: 1,
+    overrideAccess: false,
   })
 
   const side = docs[0]

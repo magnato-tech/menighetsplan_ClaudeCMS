@@ -6,11 +6,17 @@ export const Nyheter: CollectionConfig = {
   labels: { singular: 'Nyhet', plural: 'Nyheter' },
   admin: {
     useAsTitle: 'tittel',
-    defaultColumns: ['tittel', 'publisertDato'],
+    defaultColumns: ['tittel', '_status', 'publisertDato'],
     group: 'Innhold',
   },
+  versions: {
+    drafts: true,
+  },
   access: {
-    read: () => true,
+    read: ({ req }) => {
+      if (req.user) return true
+      return { _status: { equals: 'published' } }
+    },
   },
   fields: [
     {

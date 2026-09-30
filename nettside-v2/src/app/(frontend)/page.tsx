@@ -26,6 +26,7 @@ export default async function HomePage() {
     collection: 'nyheter',
     sort: '-publisertDato',
     limit: 3,
+    overrideAccess: false,
   })
 
   return (

@@ -6,12 +6,18 @@ export const Sider: CollectionConfig = {
   labels: { singular: 'Side', plural: 'Sider' },
   admin: {
     useAsTitle: 'tittel',
-    defaultColumns: ['tittel', 'hierarki', 'slug', 'visIMeny'],
+    defaultColumns: ['tittel', 'hierarki', '_status', 'slug', 'visIMeny'],
     group: 'Innhold',
   },
   defaultSort: 'sorteringsnokkel',
+  versions: {
+    drafts: true,
+  },
   access: {
-    read: () => true,
+    read: ({ req }) => {
+      if (req.user) return true
+      return { _status: { equals: 'published' } }
+    },
   },
   fields: [
     {

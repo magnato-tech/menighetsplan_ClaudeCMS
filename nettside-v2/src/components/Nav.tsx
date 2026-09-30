@@ -12,6 +12,7 @@ export default async function Nav() {
     sort: 'rekkefolge',
     limit: 50,
     depth: 1,
+    overrideAccess: false,
   })
 
   // Del sidene i toppnivå og barn

@@ -645,13 +645,24 @@ async function main() {
     })
   }
 
-  console.log('Beregner hierarki-sorteringsnøkler for sidelisten i admin...')
-  const { docs: alleSiderForSortering } = await payload.find({ collection: 'sider', limit: 200, depth: 0 })
+  console.log('Beregner hierarki-sorteringsnøkler og publiserer sider (utkast/publisering ble skrudd på)...')
+  const { docs: alleSiderForSortering } = await payload.find({ collection: 'sider', limit: 200, depth: 0, overrideAccess: true })
   for (const side of alleSiderForSortering) {
     await payload.update({
       collection: 'sider',
       id: side.id,
-      data: { rekkefolge: side.rekkefolge, foreldreside: side.foreldreside },
+      data: { rekkefolge: side.rekkefolge, foreldreside: side.foreldreside, _status: 'published' },
+      overrideAccess: true,
+    })
+  }
+
+  const { docs: alleNyheterForPublisering } = await payload.find({ collection: 'nyheter', limit: 200, depth: 0, overrideAccess: true })
+  for (const nyhet of alleNyheterForPublisering) {
+    await payload.update({
+      collection: 'nyheter',
+      id: nyhet.id,
+      data: { _status: 'published' },
+      overrideAccess: true,
     })
   }
 
