@@ -6,6 +6,7 @@ export const Oppmoter: CollectionConfig = {
   admin: {
     useAsTitle: 'id',
     defaultColumns: ['aktivitet', 'person', 'status'],
+    group: 'Kommunikasjon',
   },
   access: {
     read: () => true,

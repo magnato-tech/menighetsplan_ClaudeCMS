@@ -363,15 +363,6 @@ export interface Aktiviteter {
   type?: ('arrangement' | 'gruppesamling') | null;
   tema?: string | null;
   bibeltekst?: string | null;
-  vert?: (number | null) | User;
-  invitasjonSendt?: boolean | null;
-  invitasjonSendtDato?: string | null;
-  /**
-   * Tilsvarer Gathering.isPublic — vises på den offentlige nettsiden når huket av.
-   */
-  offentlig?: boolean | null;
-  erGudstjeneste?: boolean | null;
-  avlyst?: boolean | null;
   program?:
     | {
         klokkeslett: string;
@@ -381,6 +372,15 @@ export interface Aktiviteter {
         id?: string | null;
       }[]
     | null;
+  vert?: (number | null) | User;
+  invitasjonSendt?: boolean | null;
+  invitasjonSendtDato?: string | null;
+  /**
+   * Tilsvarer Gathering.isPublic — vises på den offentlige nettsiden når huket av.
+   */
+  offentlig?: boolean | null;
+  erGudstjeneste?: boolean | null;
+  avlyst?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -725,12 +725,6 @@ export interface AktiviteterSelect<T extends boolean = true> {
   type?: T;
   tema?: T;
   bibeltekst?: T;
-  vert?: T;
-  invitasjonSendt?: T;
-  invitasjonSendtDato?: T;
-  offentlig?: T;
-  erGudstjeneste?: T;
-  avlyst?: T;
   program?:
     | T
     | {
@@ -740,6 +734,12 @@ export interface AktiviteterSelect<T extends boolean = true> {
         oppgave?: T;
         id?: T;
       };
+  vert?: T;
+  invitasjonSendt?: T;
+  invitasjonSendtDato?: T;
+  offentlig?: T;
+  erGudstjeneste?: T;
+  avlyst?: T;
   updatedAt?: T;
   createdAt?: T;
 }

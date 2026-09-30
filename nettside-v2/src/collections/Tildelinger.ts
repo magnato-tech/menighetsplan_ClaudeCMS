@@ -6,6 +6,7 @@ export const Tildelinger: CollectionConfig = {
   admin: {
     useAsTitle: 'id',
     defaultColumns: ['oppgave', 'person', 'svar'],
+    group: 'Program',
   },
   access: {
     read: () => true,

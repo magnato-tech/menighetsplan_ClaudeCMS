@@ -8,6 +8,9 @@ const dirname = path.dirname(filename)
 export const Media: CollectionConfig = {
   slug: 'media',
   labels: { singular: 'Bilde', plural: 'Bilder' },
+  admin: {
+    group: 'Innhold',
+  },
   access: {
     read: () => true,
   },

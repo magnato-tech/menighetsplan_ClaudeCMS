@@ -6,6 +6,7 @@ export const Grupper: CollectionConfig = {
   admin: {
     useAsTitle: 'navn',
     defaultColumns: ['navn', 'kategori', 'ledere'],
+    group: 'Program',
   },
   access: {
     read: () => true,

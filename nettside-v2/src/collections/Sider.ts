@@ -7,6 +7,7 @@ export const Sider: CollectionConfig = {
   admin: {
     useAsTitle: 'tittel',
     defaultColumns: ['tittel', 'hierarki', 'slug', 'visIMeny'],
+    group: 'Innhold',
   },
   defaultSort: 'sorteringsnokkel',
   access: {

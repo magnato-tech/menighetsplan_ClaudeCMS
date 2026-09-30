@@ -6,6 +6,7 @@ export const Oppgaver: CollectionConfig = {
   admin: {
     useAsTitle: 'tittel',
     defaultColumns: ['tittel', 'aktivitet', 'gruppe', 'status'],
+    group: 'Program',
   },
   access: {
     read: () => true,

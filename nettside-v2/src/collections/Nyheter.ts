@@ -7,6 +7,7 @@ export const Nyheter: CollectionConfig = {
   admin: {
     useAsTitle: 'tittel',
     defaultColumns: ['tittel', 'publisertDato'],
+    group: 'Innhold',
   },
   access: {
     read: () => true,
