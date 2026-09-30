@@ -23,6 +23,12 @@ export default async function KalenderPage() {
   return (
     <div className="side-innhold">
       <h1>Kalender</h1>
+      <p>
+        <a href="/kalender.ics" className="kalender-abonner-lenke">
+          📅 Abonner på kalenderen
+        </a>
+        <span className="dempet"> — legg til i Google Kalender, Outlook eller Apple Kalender</span>
+      </p>
       {aktiviteter.length === 0 && <p>Ingen kommende aktiviteter registrert ennå.</p>}
       {manedsrekkefolge.map((maaned) => (
         <section key={maaned} style={{ marginBottom: '2rem' }}>

@@ -636,3 +636,18 @@ body {
     grid-template-columns: 1fr !important;
   }
 }
+
+.kalender-abonner-lenke {
+  display: inline-block;
+  background: var(--sjo);
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.kalender-abonner-lenke:hover {
+  background: #163a4a;
+}
