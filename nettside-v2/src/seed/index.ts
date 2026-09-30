@@ -1,6 +1,43 @@
 import 'dotenv/config'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
+import sharp from 'sharp'
+
+const placeholderFarger = ['#1f4e5f', '#c8873a', '#2e8b57', '#7a3b8c', '#a33', '#1a6e8e']
+let placeholderTeller = 0
+
+async function lagPlaceholderBilde(
+  payload: Awaited<ReturnType<typeof getPayload>>,
+  alt: string,
+  bredde = 800,
+  hoyde = 500,
+): Promise<number> {
+  const { docs } = await payload.find({ collection: 'media', where: { alt: { equals: alt } }, limit: 1 })
+  if (docs.length > 0) return docs[0].id as number
+
+  const farge = placeholderFarger[placeholderTeller % placeholderFarger.length]
+  placeholderTeller += 1
+  const escapedAlt = alt.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+  const svg = `
+    <svg width="${bredde}" height="${hoyde}" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100%" height="100%" fill="${farge}" />
+      <text x="50%" y="50%" font-family="sans-serif" font-size="${Math.round(bredde / 22)}" fill="white"
+        text-anchor="middle" dominant-baseline="middle">${escapedAlt}</text>
+    </svg>
+  `
+  const buffer = await sharp(Buffer.from(svg)).png().toBuffer()
+  const opprettet = await payload.create({
+    collection: 'media',
+    data: { alt },
+    file: {
+      data: buffer,
+      mimetype: 'image/png',
+      name: `${alt.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`,
+      size: buffer.length,
+    },
+  })
+  return opprettet.id as number
+}
 
 const richText = (tekst: string) => ({
   root: {
@@ -235,24 +272,30 @@ async function main() {
 
   const aktIder: Record<string, string | number> = {}
   for (const a of aktiviteterData) {
-    const opprettet = await finnEllerOpprett<{ id: string | number }>(
-      payload,
-      'aktiviteter',
-      { tittel: { equals: a.tittel }, start: { equals: a.start } },
-      {
-        gruppe: a.gruppe,
-        tittel: a.tittel,
-        start: a.start,
-        slutt: a.slutt,
-        sted: a.sted,
-        type: a.type,
-        tema: a.tema,
-        erGudstjeneste: a.erGudstjeneste || false,
-        offentlig: a.offentlig || false,
-        avlyst: false,
-      },
-    )
-    aktIder[a.tittel] = opprettet.id
+    const bildeId = await lagPlaceholderBilde(payload, a.tittel)
+    const { docs: eksisterendeAkt } = await payload.find({
+      collection: 'aktiviteter',
+      where: { tittel: { equals: a.tittel }, start: { equals: a.start } },
+      limit: 1,
+    })
+    const data = {
+      gruppe: a.gruppe,
+      tittel: a.tittel,
+      bilde: bildeId,
+      start: a.start,
+      slutt: a.slutt,
+      sted: a.sted,
+      type: a.type,
+      tema: a.tema,
+      erGudstjeneste: a.erGudstjeneste || false,
+      offentlig: a.offentlig || false,
+      avlyst: false,
+    }
+    const opprettet =
+      eksisterendeAkt.length > 0
+        ? await payload.update({ collection: 'aktiviteter', id: eksisterendeAkt[0].id, data: data as never })
+        : await payload.create({ collection: 'aktiviteter', data: data as never })
+    aktIder[a.tittel] = (opprettet as { id: string | number }).id
   }
 
   console.log('Sår oppgaver og tildelinger (dekket/mangler/forfall)...')
@@ -542,6 +585,52 @@ async function main() {
         rekkefolge: u.rekkefolge,
         foreldreside: vartArbeidId,
         blokker: [{ blockType: 'tekst', innhold: richText(u.tekst) }],
+      },
+    })
+  }
+
+  console.log('Sår hero-seksjon og "Aktuelt"-nyheter (mockup, med plassholderbilder)...')
+  const forsideEksisterende = await payload.findGlobal({ slug: 'forsideinnstillinger' }).catch(() => null)
+  if (!forsideEksisterende?.heroBilde) {
+    const heroBildeId = await lagPlaceholderBilde(payload, 'Hero-bilde forside', 1600, 700)
+    await payload.updateGlobal({
+      slug: 'forsideinnstillinger',
+      data: {
+        heroBilde: heroBildeId,
+        heroOverskrift: 'Velkommen til Lillesand Misjonskirke',
+        heroKnappTekst: 'Les mer om oss',
+        heroKnappLenke: '/om-oss',
+      },
+    })
+  }
+
+  const nyheterData = [
+    {
+      slug: 'folkemote-host',
+      tittel: 'Folkemøte om høsten',
+      ingress: 'Vi inviterer til folkemøte med informasjon om semesterets satsinger og felles bønn.',
+      tekst: '(Eksempeltekst)\n\nVi inviterer hele menigheten til folkemøte, der vi deler planer for høsten, ser tilbake på sommeren og ber sammen for veien videre.\n\nDet blir enkel bevertning. Alle er velkomne, uansett om du er medlem eller ny i fellesskapet.',
+    },
+    {
+      slug: 'konsert-oktober',
+      tittel: 'Konsert i kirken',
+      ingress: 'En kveld med lovsang og musikk, åpen for hele familien.',
+      tekst: '(Eksempeltekst)\n\nVi ønsker velkommen til en konsertkveld med lokale musikere. Dørene åpner en halvtime før konserten, og det blir kaffe og kaker i pausen.\n\nGratis inngang, kollekt til menighetens arbeid.',
+    },
+  ]
+  for (const n of nyheterData) {
+    const { docs } = await payload.find({ collection: 'nyheter', where: { slug: { equals: n.slug } }, limit: 1 })
+    if (docs.length > 0) continue
+    const bildeId = await lagPlaceholderBilde(payload, n.tittel)
+    await payload.create({
+      collection: 'nyheter',
+      data: {
+        tittel: n.tittel,
+        slug: n.slug,
+        bilde: bildeId,
+        ingress: n.ingress,
+        innhold: richText(n.tekst),
+        publisertDato: new Date().toISOString(),
       },
     })
   }

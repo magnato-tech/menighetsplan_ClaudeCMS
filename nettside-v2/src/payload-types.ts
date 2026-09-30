@@ -291,6 +291,10 @@ export interface Aktiviteter {
   id: number;
   gruppe: number | Grupper;
   tittel: string;
+  /**
+   * Vises i arrangementslisten på forsiden, i kalenderen og på arrangementets egen side.
+   */
+  bilde: number | Media;
   start: string;
   slutt?: string | null;
   sted?: string | null;
@@ -609,6 +613,7 @@ export interface NyheterSelect<T extends boolean = true> {
 export interface AktiviteterSelect<T extends boolean = true> {
   gruppe?: T;
   tittel?: T;
+  bilde?: T;
   start?: T;
   slutt?: T;
   sted?: T;

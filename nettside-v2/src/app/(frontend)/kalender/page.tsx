@@ -41,6 +41,9 @@ export default async function KalenderPage() {
           <ul className="aktivitetsliste">
             {gruppert[maaned].map((a) => (
               <li key={a.id} className={a.avlyst ? 'avlyst' : ''}>
+                {a.bilde && typeof a.bilde === 'object' && a.bilde.url && (
+                  <img className="aktivitet-miniatyr" src={a.bilde.url} alt={a.bilde.alt || ''} />
+                )}
                 <span className="dato">{fmtDatoTid(a.start)}</span>
                 <span className="tittel">{a.tittel}</span>
                 {a.avlyst && <span className="tag tag-avlyst">Avlyst</span>}

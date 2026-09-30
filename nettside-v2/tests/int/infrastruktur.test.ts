@@ -20,6 +20,29 @@ const createdIds = {
   tildelinger: [] as (string | number)[],
 }
 
+// Delt testbilde (Aktiviteter.bilde er obligatorisk) - opprettet én gang, ryddet bort til slutt
+let testBildeId: number
+let testPayload: Awaited<ReturnType<typeof getPayload>>
+
+beforeAll(async () => {
+  const payloadConfig = await config
+  testPayload = await getPayload({ config: payloadConfig })
+  const buffer = Buffer.from(
+    '89504e470d0a1a0a0000000d4948445200000001000000010802000000907753de0000000a49444154789c6360000002000155e3fe15000000004945' + '4e44ae426082',
+    'hex',
+  )
+  const bilde = (await testPayload.create({
+    collection: 'media',
+    data: { alt: `${TEST_PREFIX}Bilde` },
+    file: { data: buffer, mimetype: 'image/png', name: 'testinfra.png', size: buffer.length },
+  })) as { id: number }
+  testBildeId = bilde.id
+})
+
+afterAll(async () => {
+  await testPayload.delete({ collection: 'media', id: testBildeId }).catch(() => {})
+})
+
 describe('Infrastruktur: database ↔ Payload ↔ webapp', () => {
   let payload: Awaited<ReturnType<typeof getPayload>>
 
@@ -100,6 +123,7 @@ describe('Infrastruktur: database ↔ Payload ↔ webapp', () => {
       collection: 'aktiviteter',
       data: {
         tittel: `${TEST_PREFIX}Aktivitet`,
+        bilde: testBildeId,
         start: '2026-12-25T10:00:00Z',
         gruppe: gruppe.id,
         offentlig: true,
@@ -309,6 +333,7 @@ describe('Gruppeledernivå', () => {
       collection: 'aktiviteter',
       data: {
         tittel: `${TEST_PREFIX}LederAktivitet`,
+        bilde: testBildeId,
         start: '2026-12-31T18:00:00Z',
         gruppe: gruppe.id,
         offentlig: true,

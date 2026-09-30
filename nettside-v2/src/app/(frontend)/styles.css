@@ -414,6 +414,23 @@ body {
   font-size: 0.9rem;
 }
 
+.nyhetskort-les-mer {
+  display: block;
+  margin: 0 0.8rem 0.8rem;
+  color: var(--sjo);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+}
+
+.aktivitet-miniatyr {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
 /* Gruppechat og handlinger */
 .gruppechat-header {
   margin-bottom: 1.5rem;

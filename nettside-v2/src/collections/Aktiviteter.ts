@@ -24,6 +24,15 @@ export const Aktiviteter: CollectionConfig = {
       required: true,
     },
     {
+      name: 'bilde',
+      type: 'upload',
+      relationTo: 'media',
+      required: true,
+      admin: {
+        description: 'Vises i arrangementslisten på forsiden, i kalenderen og på arrangementets egen side.',
+      },
+    },
+    {
       name: 'start',
       type: 'date',
       required: true,

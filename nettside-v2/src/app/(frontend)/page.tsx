@@ -70,6 +70,7 @@ export default async function HomePage() {
                 )}
                 <h3>{nyhet.tittel}</h3>
                 {nyhet.ingress && <p>{nyhet.ingress}</p>}
+                <span className="nyhetskort-les-mer">LES MER →</span>
               </a>
             ))}
           </div>
@@ -93,6 +94,9 @@ export default async function HomePage() {
         <ul className="aktivitetsliste">
           {aktiviteter.map((a) => (
             <li key={a.id} className={a.avlyst ? 'avlyst' : ''}>
+              {a.bilde && typeof a.bilde === 'object' && a.bilde.url && (
+                <img className="aktivitet-miniatyr" src={a.bilde.url} alt={a.bilde.alt || ''} />
+              )}
               <span className="dato">{fmtDatoTid(a.start)}</span>
               <span className="tittel">{a.tittel}</span>
               {a.avlyst && <span className="tag tag-avlyst">Avlyst</span>}
