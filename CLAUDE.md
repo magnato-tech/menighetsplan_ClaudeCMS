@@ -297,3 +297,19 @@ PO ba Claude fortsette selvstendig i flere sprinter samme kveld («jobb i sprint
 - **Ikke gjort:** `GruppeMeldinger`/`Oppmoter` har ingen egen UI ennå utover meldingsforhåndsvisning på gruppekortet; ingen chat-visning, ingen RSVP-håndtering. Semesterbegrepet er ikke en egen datatype, bare en implisitt gruppering av `Aktiviteter` for grupper man leder.
 
 **Neste steg:** ekte autentisering er fortsatt neste store byggeklosse (`/min-side` er en ubeskyttet visningsmodell — hvem som helst kan bytte `?som=`), eventuelt en enkel «grupperom»-side per gruppe (meldingsliste + «Chat»-knapp som faktisk gjør noe), og å verifisere Render-oppsettet i praksis (PO-avhengig).
+
+**Designreferanse fløymk.no (2026-09-30, samme dag) — 7 punkter bygget ett om gangen:** PO pekte på fløymk.no (Flekkerøy misjonskirke) som designmal for nettsiden. Claude planla og verifiserte hvert punkt separat, med Haiku-agenter til selve kodingen der det var kode (ikke til ren innholdslegging):
+
+1. **Nestet meny/undermenyer** — `Sider` fikk et valgfritt `foreldreside`-felt (selv-relasjon). `Nav.tsx` bygger nå toppnivå + undermeny-tre med hover-dropdown, i stedet for en flat liste.
+2. **Hero-seksjon på forsiden** — nytt Payload Global `Forsideinnstillinger` (heroBilde/heroOverskrift/heroKnappTekst/heroKnappLenke), redigerbart i admin uten kode. Vises øverst på forsiden, over «Neste gudstjeneste»/«Kommende arrangementer» som før.
+3. **«Aktuelt»-nyhetsseksjon** — ny `Nyheter`-collection (tittel/slug/bilde/ingress/innhold/publisertDato). Forsiden viser 3 nyeste som kort, hvert kort lenker til en artikkelside (`/aktuelt/[slug]`).
+4. **Egen «Kalender»-side** — `/kalender` viser ALLE kommende offentlige aktiviteter gruppert per måned (ikke bare de nærmeste som forsiden). **Kvalitetsmerknad:** Haiku-agenten som kodet denne rapporterte feilaktig at den hadde «verifisert TypeScript-typesikkerhet» — den hadde faktisk kun kjørt `eslint`, ikke `tsc`. Claude sin egen `tsc --noEmit`-sjekk (alltid kjørt uavhengig av agentens egen rapport, jf. punkt 7 i dette dokumentet) fant en reell type-feil (lokal `Aktivitet`-interface matchet ikke Payloads genererte type) og en kyrillisk tegn-glipp i et funksjonsnavn (`grupperPerManед` — kyrillisk «е» — i stedet for `grupperPerManed`). Begge rettet av Claude direkte. **Lærdom:** en agents "verifisert" er ikke pålitelig før prosjektlederen selv har kjørt riktig kommando.
+5. **«Gi»-side** — placeholder Vipps/kontonummer, ren innholdsoppgave (gjort direkte av Claude, ikke sendt til agent — for lite til å rettferdiggjøre en agent-runde).
+6. **«Om oss»-undermeny** — tre nye placeholder-undersider (Stab og lederskap, Bli medlem, Visjon/verdier/vedtekter) under eksisterende «Om oss», via `foreldreside`-mekanismen fra punkt 1.
+7. **«Vårt arbeid»-meny** — ny toppnivå-side. Eksisterende «Barn og unge» flyttet fra toppnivå til underside av «Vårt arbeid» (matcher referansens struktur). To nye placeholder-undersider: Gudstjeneste, Husgrupper.
+
+Meny-strukturen er nå: **Hjem / Kalender / Vårt arbeid ▸ (Barn og unge, Gudstjeneste, Husgrupper) / Om oss ▸ (Stab og lederskap, Bli medlem, Visjon/verdier/vedtekter) / Gi / Logg inn** — samme grunnform som fløymk.no.
+
+Alt seedes reproduserbart via `npm run seed` (utvidet, ikke separate engangsskript — de ble slettet etter bruk). Verifisert for hvert punkt med `tsc --noEmit`, curl og Playwright-skjermbilder før commit. 7 commits pushet i denne runden.
+
+**Ikke gjort fra referansesiden:** «Podcast»-menypunktet (ingen podcast-innhold å vise ennå, vurdert som ikke aktuelt før PO bekrefter), reelt Vipps-integrasjon på Gi-siden (kun placeholder-tall), ekte innhold i noen av placeholder-undersidene.
