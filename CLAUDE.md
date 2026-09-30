@@ -365,4 +365,15 @@ Alt seedes reproduserbart via `npm run seed` (utvidet, ikke separate engangsskri
 - **Container-merknad:** skyøkten hadde restartet mellom forrige og denne oppgaven (Postgres og `next dev` var stoppet, som nevnt tidligere i dette dokumentet er et kjent trekk ved miljøet) — startet begge på nytt før verifisering, ingen datatap siden selve databasedisken består.
 - Verifisert: `npm run seed` kjørt (alle 9 datoer havnet i oktober/november 2026, foran dagens dato 30. sept), `npx tsc --noEmit` (0 feil), `npm run test` (51/51 grønt), og Playwright-skjermbilder som bekrefter forsiden og `/kalender` nå viser 5 offentlige kommende arrangementer med bilder og riktig «Neste gudstjeneste».
 
+**Neste steg (før neste avsnitt):** ekte autentisering (fortsatt bevisst utsatt til PO er hjemme), ekte Vipps/kontaktinfo i placeholder-innholdet, og å verifisere Render-oppsettet.
+
+**Fire nye blokktyper for Sider (2026-09-30, samme dag) — PO ba om flere blokktyper («Video, kalender, hero, kolonner, blokktyper, osv»):**
+- **Video**: YouTube-/Vimeo-lenke → embed-iframe. Ny `src/lib/videoEmbed.ts` (`tilEmbedUrl()`) parser begge lenkeformatene til riktig embed-URL, uten noe eksternt bibliotek.
+- **Hero**: bilde + overskrift + valgfri knapp — gjenbruker det eksisterende `.hero`/`.hero-overlay`-CSS-mønsteret fra den globale forside-heroen (`Forsideinnstillinger`), men er nå en blokk som kan legges inn på **hvilken som helst side**, ikke bare forsiden.
+- **Kalender**: viser N kommende offentlige aktiviteter direkte inni en side (valgfritt filter for kun gudstjenester), gjenbruker samme aktivitetsliste-/bilde-miniatyr-mønster som forsiden og `/kalender`.
+- **Kolonner**: 2–3 kolonner (overskrift/bilde/riktekst hver) for enkle side-om-side-oppsett, med automatisk stabling til én kolonne på mobil (`@media (max-width: 700px)`).
+- **Bevisst valg:** alle fire bygget **uten nye npm-avhengigheter** — kun Payloads egne feltprimitiver og `<iframe>`/native HTML, samme mønster som Facebook-blokken fra før. Ba PO eksplisitt om avklaring på hvilke blokktyper som var ønsket vs. hvilke som ville krevd nye pakker (skjema/`plugin-form-builder`, interaktive kart/Leaflet, diagrammer) før dette ble bygget — PO valgte de fire som ikke krever nye avhengigheter.
+- **Biforbedring:** trakk ut duplisert `fmtDatoTid`-funksjon (fantes identisk i tre filer) til ny delt `src/lib/format.ts`.
+- Verifisert: `npx tsc --noEmit` (0 feil), `npm run test` (51/51 grønt), og en midlertidig testside opprettet direkte via Payloads lokale API med alle fire blokktyper i bruk samtidig — screenshottet på desktop og mobil (ingen JS-feil i konsollen, video-embed-URL korrekt utledet, kalenderblokk viste riktig antall rader, kolonner side-ved-side på desktop/stablet på mobil), og admin-redigeringssiden sjekket direkte (alle fire blokkene vises og redigeres korrekt med norske feltnavn). Testsiden slettet igjen etter verifisering — ingen testdata latt igjen.
+
 **Neste steg:** ekte autentisering (fortsatt bevisst utsatt til PO er hjemme), ekte Vipps/kontaktinfo i placeholder-innholdet, og å verifisere Render-oppsettet.
