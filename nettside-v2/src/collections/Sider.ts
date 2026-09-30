@@ -37,6 +37,14 @@ export const Sider: CollectionConfig = {
       defaultValue: 0,
     },
     {
+      name: 'foreldreside',
+      type: 'relationship',
+      relationTo: 'sider',
+      admin: {
+        description: 'Valgfritt: velg en annen side som denne skal vises som undermeny-punkt under.',
+      },
+    },
+    {
       name: 'blokker',
       type: 'blocks',
       blocks: [

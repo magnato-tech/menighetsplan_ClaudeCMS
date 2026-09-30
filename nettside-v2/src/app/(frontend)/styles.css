@@ -289,3 +289,42 @@ body {
   background: #2e8b57;
   border-color: #2e8b57;
 }
+
+.meny-punkt-med-undermeny {
+  position: relative;
+}
+
+.undermeny {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  list-style: none;
+  padding: 0.5rem 0;
+  margin: 0;
+  min-width: 200px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 0 0 6px 6px;
+  z-index: 10;
+}
+
+.meny-punkt-med-undermeny:hover .undermeny {
+  display: block;
+}
+
+.undermeny li {
+  list-style: none;
+}
+
+.undermeny a {
+  display: block;
+  padding: 0.5rem 1rem;
+  color: var(--tekst);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.undermeny a:hover {
+  background: var(--sand);
+}

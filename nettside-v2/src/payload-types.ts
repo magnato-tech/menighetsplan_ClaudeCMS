@@ -195,6 +195,10 @@ export interface Sider {
   slug: string;
   visIMeny?: boolean | null;
   rekkefolge?: number | null;
+  /**
+   * Valgfritt: velg en annen side som denne skal vises som undermeny-punkt under.
+   */
+  foreldreside?: (number | null) | Sider;
   blokker?:
     | (
         | {
@@ -509,6 +513,7 @@ export interface SiderSelect<T extends boolean = true> {
   slug?: T;
   visIMeny?: T;
   rekkefolge?: T;
+  foreldreside?: T;
   blokker?:
     | T
     | {
