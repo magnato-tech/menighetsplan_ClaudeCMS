@@ -603,3 +603,36 @@ body {
 .tag-venter-svar {
   background: #7a8c93;
 }
+
+.blokk-video {
+  margin: 1.5rem 0;
+}
+
+.blokk-video iframe {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: none;
+  border-radius: 8px;
+}
+
+.blokk-kalender {
+  margin: 1.5rem 0;
+}
+
+.blokk-kolonner {
+  display: grid;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.kolonne img {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 0.6rem;
+}
+
+@media (max-width: 700px) {
+  .blokk-kolonner {
+    grid-template-columns: 1fr !important;
+  }
+}

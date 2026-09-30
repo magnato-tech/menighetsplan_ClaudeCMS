@@ -243,6 +243,60 @@ export interface Sider {
             blockName?: string | null;
             blockType: 'facebook';
           }
+        | {
+            /**
+             * YouTube- eller Vimeo-lenke
+             */
+            url: string;
+            bildetekst?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'video';
+          }
+        | {
+            bilde: number | Media;
+            overskrift: string;
+            knappTekst?: string | null;
+            knappLenke?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'hero';
+          }
+        | {
+            tittel?: string | null;
+            antall?: number | null;
+            kunGudstjenester?: boolean | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'kalender';
+          }
+        | {
+            kolonner?:
+              | {
+                  overskrift?: string | null;
+                  bilde?: (number | null) | Media;
+                  innhold?: {
+                    root: {
+                      type: string;
+                      children: {
+                        type: any;
+                        version: number;
+                        [k: string]: unknown;
+                      }[];
+                      direction: ('ltr' | 'rtl') | null;
+                      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                      indent: number;
+                      version: number;
+                    };
+                    [k: string]: unknown;
+                  } | null;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'kolonner';
+          }
       )[]
     | null;
   updatedAt: string;
@@ -585,6 +639,47 @@ export interface SiderSelect<T extends boolean = true> {
           | T
           | {
               url?: T;
+              id?: T;
+              blockName?: T;
+            };
+        video?:
+          | T
+          | {
+              url?: T;
+              bildetekst?: T;
+              id?: T;
+              blockName?: T;
+            };
+        hero?:
+          | T
+          | {
+              bilde?: T;
+              overskrift?: T;
+              knappTekst?: T;
+              knappLenke?: T;
+              id?: T;
+              blockName?: T;
+            };
+        kalender?:
+          | T
+          | {
+              tittel?: T;
+              antall?: T;
+              kunGudstjenester?: T;
+              id?: T;
+              blockName?: T;
+            };
+        kolonner?:
+          | T
+          | {
+              kolonner?:
+                | T
+                | {
+                    overskrift?: T;
+                    bilde?: T;
+                    innhold?: T;
+                    id?: T;
+                  };
               id?: T;
               blockName?: T;
             };

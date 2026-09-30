@@ -89,6 +89,101 @@ export const Sider: CollectionConfig = {
             },
           ],
         },
+        {
+          slug: 'video',
+          labels: { singular: 'Videoblokk', plural: 'Videoblokker' },
+          fields: [
+            {
+              name: 'url',
+              type: 'text',
+              required: true,
+              admin: {
+                description: 'YouTube- eller Vimeo-lenke',
+              },
+            },
+            {
+              name: 'bildetekst',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          slug: 'hero',
+          labels: { singular: 'Hero-blokk', plural: 'Hero-blokker' },
+          fields: [
+            {
+              name: 'bilde',
+              type: 'upload',
+              relationTo: 'media',
+              required: true,
+            },
+            {
+              name: 'overskrift',
+              type: 'text',
+              required: true,
+            },
+            {
+              name: 'knappTekst',
+              type: 'text',
+            },
+            {
+              name: 'knappLenke',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          slug: 'kalender',
+          labels: { singular: 'Kalenderblokk', plural: 'Kalenderblokker' },
+          fields: [
+            {
+              name: 'tittel',
+              type: 'text',
+              defaultValue: 'Kommende arrangementer',
+            },
+            {
+              name: 'antall',
+              type: 'number',
+              defaultValue: 5,
+              min: 1,
+              max: 20,
+            },
+            {
+              name: 'kunGudstjenester',
+              type: 'checkbox',
+              label: 'Vis kun gudstjenester',
+              defaultValue: false,
+            },
+          ],
+        },
+        {
+          slug: 'kolonner',
+          labels: { singular: 'Kolonneblokk', plural: 'Kolonneblokker' },
+          fields: [
+            {
+              name: 'kolonner',
+              type: 'array',
+              minRows: 2,
+              maxRows: 3,
+              fields: [
+                {
+                  name: 'overskrift',
+                  type: 'text',
+                },
+                {
+                  name: 'bilde',
+                  type: 'upload',
+                  relationTo: 'media',
+                },
+                {
+                  name: 'innhold',
+                  type: 'richText',
+                  editor: lexicalEditor(),
+                },
+              ],
+            },
+          ],
+        },
       ],
     },
   ],
