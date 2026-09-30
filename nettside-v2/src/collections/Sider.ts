@@ -6,8 +6,9 @@ export const Sider: CollectionConfig = {
   labels: { singular: 'Side', plural: 'Sider' },
   admin: {
     useAsTitle: 'tittel',
-    defaultColumns: ['tittel', 'slug', 'visIMeny'],
+    defaultColumns: ['tittel', 'hierarki', 'slug', 'visIMeny'],
   },
+  defaultSort: 'sorteringsnokkel',
   access: {
     read: () => true,
   },
@@ -42,6 +43,46 @@ export const Sider: CollectionConfig = {
       relationTo: 'sider',
       admin: {
         description: 'Valgfritt: velg en annen side som denne skal vises som undermeny-punkt under.',
+      },
+    },
+    {
+      name: 'hierarki',
+      type: 'text',
+      virtual: true,
+      admin: {
+        readOnly: true,
+        description: 'Beregnes automatisk, kun til visning i sidelisten.',
+      },
+      hooks: {
+        afterRead: [
+          ({ data }) => {
+            const foreldre = data?.foreldreside
+            if (!foreldre) return 'Toppnivå'
+            if (typeof foreldre === 'object' && foreldre.tittel) return `↳ Underside av ${foreldre.tittel}`
+            return '↳ Underside'
+          },
+        ],
+      },
+    },
+    {
+      name: 'sorteringsnokkel',
+      type: 'text',
+      admin: {
+        hidden: true,
+        description:
+          'Beregnes automatisk ut fra rekkefølge og foreldreside, brukes kun til å sortere sidelisten. Merk: hvis foreldresidens egen rekkefølge endres senere, må undersidene lagres på nytt for at sorteringen skal oppdateres.',
+      },
+      hooks: {
+        beforeChange: [
+          async ({ data, req }) => {
+            const egen = String(data?.rekkefolge ?? 0).padStart(4, '0')
+            if (!data?.foreldreside) return egen
+            const foreldreId = typeof data.foreldreside === 'object' ? data.foreldreside.id : data.foreldreside
+            const forelder = await req.payload.findByID({ collection: 'sider', id: foreldreId, depth: 0 }).catch(() => null)
+            const foreldreRekkefolge = String(forelder?.rekkefolge ?? 0).padStart(4, '0')
+            return `${foreldreRekkefolge}.${egen}`
+          },
+        ],
       },
     },
     {

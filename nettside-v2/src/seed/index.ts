@@ -645,6 +645,16 @@ async function main() {
     })
   }
 
+  console.log('Beregner hierarki-sorteringsnøkler for sidelisten i admin...')
+  const { docs: alleSiderForSortering } = await payload.find({ collection: 'sider', limit: 200, depth: 0 })
+  for (const side of alleSiderForSortering) {
+    await payload.update({
+      collection: 'sider',
+      id: side.id,
+      data: { rekkefolge: side.rekkefolge, foreldreside: side.foreldreside },
+    })
+  }
+
   console.log('Ferdig.')
   console.log('Admin (globalRolle=admin): kari.nordmann@eksempel.no / endre-meg-123')
   console.log('Gruppeleder-eksempel (leder Lyd og bilde + Kirkekaffe): ola.hansen@eksempel.no / endre-meg-123')

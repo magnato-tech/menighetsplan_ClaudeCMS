@@ -205,6 +205,14 @@ export interface Sider {
    * Valgfritt: velg en annen side som denne skal vises som undermeny-punkt under.
    */
   foreldreside?: (number | null) | Sider;
+  /**
+   * Beregnes automatisk, kun til visning i sidelisten.
+   */
+  hierarki?: string | null;
+  /**
+   * Beregnes automatisk ut fra rekkefølge og foreldreside, brukes kun til å sortere sidelisten. Merk: hvis foreldresidens egen rekkefølge endres senere, må undersidene lagres på nytt for at sorteringen skal oppdateres.
+   */
+  sorteringsnokkel?: string | null;
   blokker?:
     | (
         | {
@@ -617,6 +625,8 @@ export interface SiderSelect<T extends boolean = true> {
   visIMeny?: T;
   rekkefolge?: T;
   foreldreside?: T;
+  hierarki?: T;
+  sorteringsnokkel?: T;
   blokker?:
     | T
     | {
