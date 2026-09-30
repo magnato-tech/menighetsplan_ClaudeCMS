@@ -8,6 +8,7 @@ import sharp from 'sharp'
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Sider } from './collections/Sider'
+import { Nyheter } from './collections/Nyheter'
 import { Aktiviteter } from './collections/Aktiviteter'
 import { Grupper } from './collections/Grupper'
 import { Oppgaver } from './collections/Oppgaver'
@@ -26,7 +27,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media, Sider, Aktiviteter, Grupper, Oppgaver, Tildelinger, GruppeMeldinger, Oppmoter],
+  collections: [Users, Media, Sider, Nyheter, Aktiviteter, Grupper, Oppgaver, Tildelinger, GruppeMeldinger, Oppmoter],
   globals: [Forsideinnstillinger],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

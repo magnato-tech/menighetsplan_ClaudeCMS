@@ -375,3 +375,41 @@ body {
   background: white;
   color: var(--sjo);
 }
+
+.aktuelt {
+  margin-bottom: 2rem;
+}
+
+.nyhetskort-liste {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.nyhetskort {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  text-decoration: none;
+  color: var(--tekst);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: block;
+}
+
+.nyhetskort img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  display: block;
+}
+
+.nyhetskort h3 {
+  margin: 0.8rem 0.8rem 0.3rem;
+  text-decoration: underline;
+}
+
+.nyhetskort p {
+  margin: 0 0.8rem 0.8rem;
+  color: var(--dempet);
+  font-size: 0.9rem;
+}

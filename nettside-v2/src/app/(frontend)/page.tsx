@@ -33,6 +33,12 @@ export default async function HomePage() {
 
   const nesteGudstjeneste = aktiviteter.find((a) => a.erGudstjeneste)
 
+  const { docs: nyheter } = await payload.find({
+    collection: 'nyheter',
+    sort: '-publisertDato',
+    limit: 3,
+  })
+
   return (
     <div className="forside">
       {forside && (
@@ -49,6 +55,23 @@ export default async function HomePage() {
             {forside.heroKnappTekst && forside.heroKnappLenke && (
               <a href={forside.heroKnappLenke} className="hero-knapp">{forside.heroKnappTekst}</a>
             )}
+          </div>
+        </section>
+      )}
+
+      {nyheter.length > 0 && (
+        <section className="aktuelt">
+          <h2>Aktuelt</h2>
+          <div className="nyhetskort-liste">
+            {nyheter.map((nyhet) => (
+              <a key={nyhet.id} href={`/aktuelt/${nyhet.slug}`} className="nyhetskort">
+                {nyhet.bilde && typeof nyhet.bilde === 'object' && nyhet.bilde.url && (
+                  <img src={nyhet.bilde.url} alt={nyhet.bilde.alt || ''} />
+                )}
+                <h3>{nyhet.tittel}</h3>
+                {nyhet.ingress && <p>{nyhet.ingress}</p>}
+              </a>
+            ))}
           </div>
         </section>
       )}

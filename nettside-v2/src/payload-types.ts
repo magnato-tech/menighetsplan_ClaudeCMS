@@ -70,6 +70,7 @@ export interface Config {
     users: User;
     media: Media;
     sider: Sider;
+    nyheter: Nyheter;
     aktiviteter: Aktiviteter;
     grupper: Grupper;
     oppgaver: Oppgaver;
@@ -86,6 +87,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     sider: SiderSelect<false> | SiderSelect<true>;
+    nyheter: NyheterSelect<false> | NyheterSelect<true>;
     aktiviteter: AktiviteterSelect<false> | AktiviteterSelect<true>;
     grupper: GrupperSelect<false> | GrupperSelect<true>;
     oppgaver: OppgaverSelect<false> | OppgaverSelect<true>;
@@ -248,6 +250,41 @@ export interface Sider {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "nyheter".
+ */
+export interface Nyheter {
+  id: number;
+  tittel: string;
+  /**
+   * Brukes i URL-en, f.eks. "menighetsskolen-modul-3".
+   */
+  slug: string;
+  bilde?: (number | null) | Media;
+  /**
+   * Kort tekst som vises på forsiden sammen med bildet.
+   */
+  ingress?: string | null;
+  innhold?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  publisertDato?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "aktiviteter".
  */
 export interface Aktiviteter {
@@ -399,6 +436,10 @@ export interface PayloadLockedDocument {
         value: number | Sider;
       } | null)
     | ({
+        relationTo: 'nyheter';
+        value: number | Nyheter;
+      } | null)
+    | ({
         relationTo: 'aktiviteter';
         value: number | Aktiviteter;
       } | null)
@@ -544,6 +585,20 @@ export interface SiderSelect<T extends boolean = true> {
               blockName?: T;
             };
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "nyheter_select".
+ */
+export interface NyheterSelect<T extends boolean = true> {
+  tittel?: T;
+  slug?: T;
+  bilde?: T;
+  ingress?: T;
+  innhold?: T;
+  publisertDato?: T;
   updatedAt?: T;
   createdAt?: T;
 }
