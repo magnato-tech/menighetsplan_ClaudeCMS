@@ -14,6 +14,7 @@ import { Oppgaver } from './collections/Oppgaver'
 import { Tildelinger } from './collections/Tildelinger'
 import { GruppeMeldinger } from './collections/GruppeMeldinger'
 import { Oppmoter } from './collections/Oppmoter'
+import { Forsideinnstillinger } from './globals/Forsideinnstillinger'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -26,6 +27,7 @@ export default buildConfig({
     },
   },
   collections: [Users, Media, Sider, Aktiviteter, Grupper, Oppgaver, Tildelinger, GruppeMeldinger, Oppmoter],
+  globals: [Forsideinnstillinger],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

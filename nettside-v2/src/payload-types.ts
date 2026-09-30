@@ -101,8 +101,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    forsideinnstillinger: Forsideinnstillinger;
+  };
+  globalsSelect: {
+    forsideinnstillinger: ForsideinnstillingerSelect<false> | ForsideinnstillingerSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -682,6 +686,35 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "forsideinnstillinger".
+ */
+export interface Forsideinnstillinger {
+  id: number;
+  /**
+   * Bakgrunnsbilde for hero-seksjonen øverst på forsiden.
+   */
+  heroBilde?: (number | null) | Media;
+  heroOverskrift?: string | null;
+  heroKnappTekst?: string | null;
+  heroKnappLenke?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "forsideinnstillinger_select".
+ */
+export interface ForsideinnstillingerSelect<T extends boolean = true> {
+  heroBilde?: T;
+  heroOverskrift?: T;
+  heroKnappTekst?: T;
+  heroKnappLenke?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

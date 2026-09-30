@@ -18,6 +18,10 @@ export default async function HomePage() {
   const payloadConfig = await config
   const payload = await getPayload({ config: payloadConfig })
 
+  const forside = await payload.findGlobal({
+    slug: 'forsideinnstillinger',
+  }).catch(() => null)
+
   const { docs: aktiviteter } = await payload.find({
     collection: 'aktiviteter',
     where: {
@@ -31,6 +35,24 @@ export default async function HomePage() {
 
   return (
     <div className="forside">
+      {forside && (
+        <section
+          className="hero"
+          style={{
+            backgroundImage: forside.heroBilde && typeof forside.heroBilde === 'object' && forside.heroBilde.url
+              ? `url(${forside.heroBilde.url})`
+              : undefined,
+          }}
+        >
+          <div className="hero-overlay">
+            <h1>{forside.heroOverskrift}</h1>
+            {forside.heroKnappTekst && forside.heroKnappLenke && (
+              <a href={forside.heroKnappLenke} className="hero-knapp">{forside.heroKnappTekst}</a>
+            )}
+          </div>
+        </section>
+      )}
+
       {nesteGudstjeneste && (
         <section className="neste-gudstjeneste">
           <h2>Neste gudstjeneste</h2>
