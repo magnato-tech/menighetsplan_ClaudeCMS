@@ -396,4 +396,11 @@ Alt seedes reproduserbart via `npm run seed` (utvidet, ikke separate engangsskri
 - **Samme feil som tidligere i prosjektet (gjentatt, fanget selv):** satte først `defaultSort` inni `admin`-objektet i stedet for på toppnivå i `CollectionConfig` — nøyaktig samme feilplassering som `Aktiviteter.ts`/`GruppeMeldinger.ts` hadde tidligere samme dag (se ovenfor). `tsc` fanget det denne gangen fordi objektet er strengt typet, i motsetning til forrige gang.
 - Verifisert: `npx tsc --noEmit` (0 feil), `npm run test` (51/51 grønt), `npm run seed` kjørt (SQL-sjekk bekrefter riktige nøkler: `0001`, `0001.0001`, `0001.0002` osv.), og Playwright-skjermbilde av sidelisten i admin som viser korrekt gruppering — samt bekreftet at tittel-lenken i lista fortsatt navigerer riktig til redigeringsvisningen.
 
+**Neste steg (før neste avsnitt):** ekte autentisering (fortsatt bevisst utsatt til PO er hjemme), ekte Vipps/kontaktinfo i placeholder-innholdet, og å verifisere Render-oppsettet.
+
+**Gruppert sidemeny og faner i admin (2026-09-30, samme dag) — PO ba om «faner og meny i admin»:**
+- **Sidemeny** gruppert via `admin.group` på alle 10 collections (Payloads egen mekanisme, ingen ny kode): **Innhold** (Sider/Nyheter/Bilder), **Program** (Aktiviteter/Grupper/Oppgaver/Tildelinger), **Kommunikasjon** (Gruppemeldinger/Oppmøter), **Brukere** (Personer) — i stedet for den forrige flate listen på 10 rader.
+- **Faner** lagt til på `Aktiviteter` (det skjemaet med flest felt, 14 stk): **Grunninfo** / **Innhold og program** / **Status og varsling**, via Payloads `type: 'tabs'` med **unavngitte** faner — datamodellen forblir flat (ingen `tabs`-namespace i dataene), bekreftet ved at `payload-types.ts` fortsatt genererer en flat `Aktiviteter`-interface, så ingen annen kode (seed, frontend, `aktivitetStatus.ts`) måtte endres.
+- Verifisert: `npx tsc --noEmit` (0 feil), `npm run test` (51/51 grønt), og innlogget i admin via Playwright — sidemenyen viser de fire gruppene (skjermbilde), Aktiviteter-skjemaet viser tre klikkbare faner med eksisterende data intakt, og forsiden/kalenderen/`/min-side` fortsatt gir 200 (ingen regresjon fra restruktureringen av feltene).
+
 **Neste steg:** ekte autentisering (fortsatt bevisst utsatt til PO er hjemme), ekte Vipps/kontaktinfo i placeholder-innholdet, og å verifisere Render-oppsettet.
