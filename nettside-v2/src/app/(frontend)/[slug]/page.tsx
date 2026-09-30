@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
+import { RichText } from '@payloadcms/richtext-lexical/react'
 import config from '@/payload.config'
 import '../styles.css'
 
@@ -22,7 +23,11 @@ export default async function SidePage({ params }: { params: Promise<{ slug: str
       <h1>{side.tittel}</h1>
       {(side.blokker || []).map((blokk, i) => {
         if (blokk.blockType === 'tekst') {
-          return <div key={i} className="blokk-tekst">{/* lexical richText rendres senere */}</div>
+          return (
+            <div key={i} className="blokk-tekst">
+              <RichText data={blokk.innhold} />
+            </div>
+          )
         }
         if (blokk.blockType === 'bilde') {
           const bilde = blokk.bilde

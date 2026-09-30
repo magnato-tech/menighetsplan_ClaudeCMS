@@ -1,8 +1,8 @@
 # Prosjektdokument: Menighets-CMS
 
-*Sist oppdatert: 2026-09-28, etter Sprint 8 (Claude tok over som prosjektleder igjen etter at GAIS avsluttet sitt arbeid). Neste: se punkt 10.*
+*Sist oppdatert: 2026-09-30. MVP-fasen (punkt 1–15, Sprint 0–13) er forlatt av PO til fordel for en ny, samlet arkitektur. Se punkt 16 for status og hvor arbeidet faktisk skjer nå.*
 
-> **Ny økt? Start her:** Les dette dokumentet, så punkt 9–14. Kjør neste sprint i punkt 10 uten å spørre om lov på forhånd, og rapporter til PO etterpå. Oppdater punkt 9 og 10 når sprinten er ferdig.
+> **Ny økt? Start her:** Les punkt 16 først — det er der prosjektet faktisk er nå. Punkt 1–15 er historikk fra MVP-fasen og forklarer bakgrunn/prinsipper som fortsatt gjelder (f.eks. arbeidsform i punkt 7), men beskriver ikke lenger den tekniske løsningen. Ny kode ligger i `nettside-v2/`, ikke i repo-roten.
 
 ## 1. Formål
 Et enkelt, vedlikeholdsfritt CMS (offentlig nettside) for Lillesand Misjonskirke, der **mesteparten av innholdet genereres automatisk** fra menighetsappen **Menighetsplan 2.0** ([Menighetsplan2.0_mobil](https://github.com/magnato-tech/Menighetsplan2.0_mobil)). CMS-et skal med tiden **erstatte eRedaktør** og ta over `lillesandmisjonskirke.no`.
@@ -240,3 +240,41 @@ PO ba Claude fortsette selvstendig i flere sprinter samme kveld («jobb i sprint
 - Skjør `uid`-regex (`^[a-z0-9-]+$`) som fungerer for mock-data, men er en antagelse som kan briste når ekte Menighetsplan-data kobles til (uavklart, punkt 6).
 - Om et fremhevet arrangement skal overstyre `?visning=`-filteret (vises uansett) er ikke bestemt — i dag forsvinner det fra «Fremhevet» hvis filteret ikke matcher. Krever et PO-valg, ikke en teknisk fiks.
 - Regelen om én ny økt per sprint (punkt 7) ble bevisst satt til side denne kvelden etter eksplisitt PO-instruks — nevnt her for åpenhet, ikke noe å «rette».
+
+## 16. Ny arkitektur (fra 2026-09-29/30) — MVP forlatt
+
+**Bakgrunn:** PO delte menighetens kommunikasjonsplan (`Menighetens_kommunikasjonsmodell_v4.15`), som krever et samlet informasjonsgrunnlag, rollebasert Min side, oppgaver/bemanning/forfallsflyt og et fullverdig CMS for admin — langt mer enn MVP-ens «faste sider + kalendervisning». Etter en arkitekturdiskusjon besluttet PO å forlate MVP-en og gi Claude full frihet til å bygge en ny løsning fra bunnen («Nå forlater vi MVP og starter på nytt prosjekt... Du er produktsjef med full frihet»).
+
+**Besluttet arkitektur (avklart med PO i dialog, ikke antatt):**
+- **Én Next.js + Payload CMS 3-applikasjon** (`nettside-v2/`), ikke separate systemer. MVP-koden (`server.js`, `lib/`, `test/`, `data/`, `innhold/`, `public/`, `package.json`, `render.yaml`) ligger fortsatt urørt i repo-roten — ikke flyttet eller slettet, kun forlatt.
+- **Database:** Postgres (ikke Supabase — vurdert og avvist fordi Payload allerede dekker auth og filopplasting selv; Supabase ville vært en duplisert, overflødig tjeneste). Kjøres foreløpig lokalt (`nettside-v2/.env`, ikke committet). Menighetens eksisterende Firestore (appens database) er en egen ting og røres ikke — ingen migrering er del av dette arbeidet nå.
+- **Bilder:** lokal disk via Payloads `Media`-collection (`nettside-v2/media/`, ikke committet), samme prinsipp som MVP-ens `innhold/bilder/`. Kan byttes til objektlagring senere uten datamodell-endring.
+- **Innlogging:** **ikke koblet inn ennå** — eksplisitt PO-beslutning («for the moment, logging is not necessary. It's only mock data»). Databasekoblingen er derimot ekte (ikke mock) — kun *innholdet* er foreløpig mock-data.
+- **Menystruktur:** étt felles nettsted, én meny. «Logg inn» er ett menypunkt blant «Hjem», «Om oss», «Barn og unge», «Kontakt» — ingen egen portal eller eget utseende. Ikke innlogget = helt vanlig offentlig menighetsnettside.
+- **Etter innlogging (strukturelt planlagt, ikke bygget):** menyen viser «Min side» (medlem/gruppeleder) eller sender administrasjon/lederskap rett inn i Payloads fulle admin-panel — samme brukerkontoer og database for alle tre nivåer, ingen separate innloggingssider.
+- **Admin = fullverdig CMS:** PO var eksplisitt på at admin-innlogging skal styre «all the content and all the programs in the church». Derfor brukes Payloads innebygde admin-panel direkte (ikke et eget skjult driftsverktøy slik først skissert) — det gir automatisk full CRUD på både innhold og «programmer» (aktiviteter, grupper, oppgaver) uten at vi må bygge en egen administrasjonsflate.
+
+**Datamodell (Payload collections, `nettside-v2/src/collections/`):**
+- `Users` — innloggingskontoer, felt `roller` (flervalg: administrasjon, lederskap, gruppeleder, frivillig, medlem)
+- `Sider` — viderefører MVP-ens blokk-modell (`tekst`, `bilde`, `facebook`), nå som Payload block-felt
+- `Aktiviteter` — gudstjenester/arrangementer/møter i én felles modell (dato+tid, sted, ansvarlig, offentlig-flagg, status, tagger)
+- `Grupper` — husgrupper/tjenestegrupper/strategigrupper, med gruppeleder og medlemmer
+- `Oppgaver` — knyttet til en aktivitet, med tildeltTil/status/forfall — første steg mot planens forfallsflyt (punkt 6.5 i kommunikasjonsplanen)
+- `Media` — bilder, lokal disk
+
+**Verifisert lokalt av Claude (2026-09-30):**
+- `npm install`, `npm run dev` — Next.js 16 + Payload 3.90 kjører på port 3000
+- Måtte rette to inkompatibiliteter mellom det offisielle blank-malen (hentet fra Payloads GitHub-repo, som lå foran npm-utgivelsen) og faktisk publisert `@payloadcms/next@3.90.2`-API: `generatePayloadViewport` fantes ikke (byttet til `metadata`-eksporten), og en stale `importMap.js` refererte fjernede Folders/Tags-komponenter (løst med `payload generate:importmap`)
+- `npm run seed` kjørt: oppretter admin-bruker, gruppeleder, 2 grupper, 3 sider (om-oss/barn-og-unge/kontakt, tekst videreført fra MVP-innholdet), 5 aktiviteter (samme datagrunnlag som `data/menighetsplan-mock.json`), 2 oppgaver
+- Offentlig forside (`/`) viser «Neste gudstjeneste» og «Kommende arrangementer» hentet live fra Postgres, avlyst-status vises gjennomstreket — samme funksjonalitet som MVP-ens forside, nå på ekte databaseoppslag
+- `/om-oss`, `/barn-og-unge`, `/kontakt` rendrer via `[slug]`-ruten, med ekte Lexical-brødtekst rendret via Payloads `RichText`-komponent (`@payloadcms/richtext-lexical/react`)
+- `/admin` laster Payloads fulle CMS-panel (200 OK)
+
+**Ikke gjort ennå / bevisste snarveier i denne fasen:**
+- Ingen ekte autentisering/rollestyring — «Logg inn»-lenken går til en placeholder-side
+- Ingen `Min side`-visning bygget ennå (kun datamodellen som gjør det mulig)
+- Ingen migrering fra appens Firestore — bevisst utenfor scope nå (PO-beslutning)
+- Postgres kjører lokalt i denne økten (`service postgresql start` + rolle/database opprettet manuelt) — ikke satt opp for Render/produksjon ennå
+- `nettside-v2/CLAUDE.md` og `AGENTS.md` er auto-generert av Next.js selv (advarsel om at Next.js 16 har brytende endringer fra treningsdata) — ikke prosjektets egne, ikke rediger dem manuelt
+
+**Neste steg (fortsettes samme natt/økt der det er mulig):** bygge en enkel Min side-struktur (selv uten ekte auth, for å vise formen), og eventuelt sette opp Postgres + `render.yaml` for `nettside-v2` på samme måte som MVP-en hadde for hosting.
