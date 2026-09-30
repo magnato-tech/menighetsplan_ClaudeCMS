@@ -26,6 +26,9 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    components: {
+      beforeDashboard: ['/components/admin/Dashboard#Dashboard'],
+    },
   },
   collections: [Users, Media, Sider, Nyheter, Aktiviteter, Grupper, Oppgaver, Tildelinger, GruppeMeldinger, Oppmoter],
   globals: [Forsideinnstillinger],
