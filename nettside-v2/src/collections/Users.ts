@@ -1,19 +1,11 @@
 import type { CollectionConfig } from 'payload'
 
-export const ROLLER = [
-  { label: 'Administrasjon', value: 'administrasjon' },
-  { label: 'Lederskap', value: 'lederskap' },
-  { label: 'Gruppeleder', value: 'gruppeleder' },
-  { label: 'Frivillig', value: 'frivillig' },
-  { label: 'Medlem', value: 'medlem' },
-] as const
-
 export const Users: CollectionConfig = {
   slug: 'users',
-  labels: { singular: 'Bruker', plural: 'Brukere' },
+  labels: { singular: 'Person', plural: 'Personer' },
   admin: {
     useAsTitle: 'navn',
-    defaultColumns: ['navn', 'email', 'roller'],
+    defaultColumns: ['navn', 'email', 'globalRolle'],
   },
   auth: true,
   fields: [
@@ -23,14 +15,17 @@ export const Users: CollectionConfig = {
       required: true,
     },
     {
-      name: 'roller',
+      name: 'globalRolle',
       type: 'select',
-      hasMany: true,
-      options: [...ROLLER],
-      defaultValue: ['medlem'],
+      options: [
+        { label: 'Medlem', value: 'member' },
+        { label: 'Administrator', value: 'admin' },
+      ],
+      defaultValue: 'member',
+      required: true,
       admin: {
         description:
-          'Styrer hva brukeren ser og kan gjøre på Min side / i admin. En bruker kan ha flere roller.',
+          'Tilsvarer Person.globalRole i Menighetsplan-appen. Om noen er gruppeleder styres av Grupper.ledere/varaledere, ikke av et felt her.',
       },
     },
     {

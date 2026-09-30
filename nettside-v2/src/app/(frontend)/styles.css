@@ -134,3 +134,158 @@ body {
 .aktivitetsliste form.forfall-stub {
   margin-left: auto;
 }
+
+.fanevelger {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.fane {
+  position: relative;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  background: white;
+  color: var(--tekst);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.fane.aktiv {
+  background: var(--sjo);
+  color: white;
+}
+
+.fane-prikk {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rav);
+  margin-left: 0.3rem;
+}
+
+.handlingskort {
+  background: #fdecec;
+  border-left: 4px solid #c0392b;
+}
+
+.handlingskort-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #c0392b;
+}
+
+.gruppekort-liste {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.gruppekort {
+  background: white;
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.gruppekort-header {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.gruppekort h3 {
+  margin: 0 0 0.3rem;
+}
+
+.gruppekort-meta {
+  color: var(--dempet);
+  font-size: 0.9rem;
+  margin: 0 0 0.7rem;
+}
+
+.gruppekort-neste {
+  background: var(--sand);
+  border-radius: 6px;
+  padding: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.gruppekort-neste-label {
+  font-size: 0.7rem;
+  color: var(--dempet);
+  letter-spacing: 0.03em;
+}
+
+.gruppekort-melding {
+  border-top: 1px solid #eee;
+  padding-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.dempet {
+  color: var(--dempet);
+}
+
+.tag-rolle-leder {
+  background: var(--rav);
+}
+.tag-rolle-nestleder {
+  background: #7a8c93;
+}
+.tag-rolle-medlem {
+  background: #b7bfc2;
+}
+
+.tag-dekket {
+  background: #2e8b57;
+}
+.tag-mangler {
+  background: #d68910;
+}
+.tag-forfall {
+  background: #c0392b;
+}
+
+.semesteroversikt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.filterchips {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.6rem 0 1rem;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  background: white;
+  text-decoration: none;
+  color: var(--tekst);
+  font-size: 0.85rem;
+  border: 1px solid #ddd;
+}
+
+.chip.aktiv {
+  background: var(--sjo);
+  color: white;
+  border-color: var(--sjo);
+}
+.chip-forfall.aktiv {
+  background: #c0392b;
+  border-color: #c0392b;
+}
+.chip-mangler.aktiv {
+  background: #d68910;
+  border-color: #d68910;
+}
+.chip-dekket.aktiv {
+  background: #2e8b57;
+  border-color: #2e8b57;
+}

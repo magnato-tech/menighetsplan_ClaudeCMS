@@ -11,6 +11,9 @@ import { Sider } from './collections/Sider'
 import { Aktiviteter } from './collections/Aktiviteter'
 import { Grupper } from './collections/Grupper'
 import { Oppgaver } from './collections/Oppgaver'
+import { Tildelinger } from './collections/Tildelinger'
+import { GruppeMeldinger } from './collections/GruppeMeldinger'
+import { Oppmoter } from './collections/Oppmoter'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -22,7 +25,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media, Sider, Aktiviteter, Grupper, Oppgaver],
+  collections: [Users, Media, Sider, Aktiviteter, Grupper, Oppgaver, Tildelinger, GruppeMeldinger, Oppmoter],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

@@ -21,13 +21,13 @@ export default async function HomePage() {
   const { docs: aktiviteter } = await payload.find({
     collection: 'aktiviteter',
     where: {
-      and: [{ offentlig: { equals: true } }, { datoStart: { greater_than: new Date().toISOString() } }],
+      and: [{ offentlig: { equals: true } }, { start: { greater_than: new Date().toISOString() } }],
     },
-    sort: 'datoStart',
+    sort: 'start',
     limit: 20,
   })
 
-  const nesteGudstjeneste = aktiviteter.find((a) => a.type === 'gudstjeneste')
+  const nesteGudstjeneste = aktiviteter.find((a) => a.erGudstjeneste)
 
   return (
     <div className="forside">
@@ -35,7 +35,7 @@ export default async function HomePage() {
         <section className="neste-gudstjeneste">
           <h2>Neste gudstjeneste</h2>
           <div className="kort">
-            <strong>{fmtDatoTid(nesteGudstjeneste.datoStart)}</strong>
+            <strong>{fmtDatoTid(nesteGudstjeneste.start)}</strong>
             <p>{nesteGudstjeneste.tittel}</p>
             {nesteGudstjeneste.sted && <p className="sted">{nesteGudstjeneste.sted}</p>}
           </div>
@@ -47,11 +47,11 @@ export default async function HomePage() {
         {aktiviteter.length === 0 && <p>Ingen kommende arrangementer registrert ennå.</p>}
         <ul className="aktivitetsliste">
           {aktiviteter.map((a) => (
-            <li key={a.id} className={a.status === 'avlyst' ? 'avlyst' : ''}>
-              <span className="dato">{fmtDatoTid(a.datoStart)}</span>
+            <li key={a.id} className={a.avlyst ? 'avlyst' : ''}>
+              <span className="dato">{fmtDatoTid(a.start)}</span>
               <span className="tittel">{a.tittel}</span>
-              {a.status === 'avlyst' && <span className="tag tag-avlyst">Avlyst</span>}
-              {a.type === 'gudstjeneste' && <span className="tag">Gudstjeneste</span>}
+              {a.avlyst && <span className="tag tag-avlyst">Avlyst</span>}
+              {a.erGudstjeneste && <span className="tag">Gudstjeneste</span>}
             </li>
           ))}
         </ul>

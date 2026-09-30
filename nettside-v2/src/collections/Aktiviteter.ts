@@ -5,79 +5,99 @@ export const Aktiviteter: CollectionConfig = {
   labels: { singular: 'Aktivitet', plural: 'Aktiviteter' },
   admin: {
     useAsTitle: 'tittel',
-    defaultColumns: ['tittel', 'type', 'datoStart', 'status'],
-    defaultSort: 'datoStart',
+    defaultColumns: ['tittel', 'gruppe', 'start', 'erGudstjeneste', 'avlyst'],
+    defaultSort: 'start',
   },
   access: {
     read: () => true,
   },
   fields: [
     {
+      name: 'gruppe',
+      type: 'relationship',
+      relationTo: 'grupper',
+      required: true,
+    },
+    {
       name: 'tittel',
       type: 'text',
       required: true,
     },
     {
-      name: 'type',
-      type: 'select',
-      options: [
-        { label: 'Gudstjeneste', value: 'gudstjeneste' },
-        { label: 'Arrangement', value: 'arrangement' },
-        { label: 'Møte', value: 'mote' },
-        { label: 'Bønn', value: 'bonn' },
-        { label: 'Annet', value: 'annet' },
-      ],
-      required: true,
-    },
-    {
-      name: 'datoStart',
+      name: 'start',
       type: 'date',
       required: true,
-      admin: {
-        date: { pickerAppearance: 'dayAndTime' },
-      },
+      admin: { date: { pickerAppearance: 'dayAndTime' } },
     },
     {
-      name: 'datoSlutt',
+      name: 'slutt',
       type: 'date',
-      admin: {
-        date: { pickerAppearance: 'dayAndTime' },
-      },
+      admin: { date: { pickerAppearance: 'dayAndTime' } },
     },
     {
       name: 'sted',
       type: 'text',
     },
     {
-      name: 'beskrivelse',
-      type: 'textarea',
+      name: 'type',
+      type: 'select',
+      options: [
+        { label: 'Arrangement', value: 'arrangement' },
+        { label: 'Gruppesamling', value: 'gruppesamling' },
+      ],
+      defaultValue: 'arrangement',
     },
     {
-      name: 'ansvarlig',
+      name: 'tema',
+      type: 'text',
+    },
+    {
+      name: 'bibeltekst',
+      type: 'text',
+    },
+    {
+      name: 'vert',
       type: 'relationship',
       relationTo: 'users',
     },
     {
+      name: 'invitasjonSendt',
+      type: 'checkbox',
+      defaultValue: false,
+    },
+    {
+      name: 'invitasjonSendtDato',
+      type: 'date',
+      admin: { condition: (data) => data?.invitasjonSendt },
+    },
+    {
       name: 'offentlig',
       type: 'checkbox',
-      defaultValue: true,
+      defaultValue: false,
       admin: {
-        description: 'Vises på den offentlige nettsiden når denne er huket av.',
+        description: 'Tilsvarer Gathering.isPublic — vises på den offentlige nettsiden når huket av.',
       },
     },
     {
-      name: 'status',
-      type: 'select',
-      options: [
-        { label: 'Planlagt', value: 'planlagt' },
-        { label: 'Avlyst', value: 'avlyst' },
-      ],
-      defaultValue: 'planlagt',
+      name: 'erGudstjeneste',
+      type: 'checkbox',
+      defaultValue: false,
     },
     {
-      name: 'tagger',
+      name: 'avlyst',
+      type: 'checkbox',
+      defaultValue: false,
+    },
+    {
+      name: 'program',
       type: 'array',
-      fields: [{ name: 'verdi', type: 'text' }],
+      label: 'Programpunkter',
+      fields: [
+        { name: 'klokkeslett', type: 'text', required: true },
+        { name: 'tittel', type: 'text', required: true },
+        { name: 'beskrivelse', type: 'textarea' },
+        { name: 'oppgave', type: 'relationship', relationTo: 'oppgaver' },
+      ],
     },
   ],
 }

@@ -5,17 +5,12 @@ export const Oppgaver: CollectionConfig = {
   labels: { singular: 'Oppgave', plural: 'Oppgaver' },
   admin: {
     useAsTitle: 'tittel',
-    defaultColumns: ['tittel', 'aktivitet', 'tildeltTil', 'status'],
+    defaultColumns: ['tittel', 'aktivitet', 'gruppe', 'status'],
   },
   access: {
     read: () => true,
   },
   fields: [
-    {
-      name: 'tittel',
-      type: 'text',
-      required: true,
-    },
     {
       name: 'aktivitet',
       type: 'relationship',
@@ -23,33 +18,41 @@ export const Oppgaver: CollectionConfig = {
       required: true,
     },
     {
-      name: 'tildeltTil',
+      name: 'gruppe',
       type: 'relationship',
-      relationTo: 'users',
+      relationTo: 'grupper',
+      required: true,
+    },
+    {
+      name: 'tittel',
+      type: 'text',
+      required: true,
+    },
+    {
+      name: 'beskrivelse',
+      type: 'textarea',
+    },
+    {
+      name: 'instruksjon',
+      type: 'textarea',
     },
     {
       name: 'status',
       type: 'select',
       options: [
-        { label: 'Ledig', value: 'ledig' },
-        { label: 'Bemannet', value: 'bemannet' },
-        { label: 'Forfall meldt', value: 'forfall_meldt' },
-        { label: 'Fullført', value: 'fullfort' },
+        { label: 'Åpen', value: 'open' },
+        { label: 'Tildelt', value: 'assigned' },
+        { label: 'Bekreftet', value: 'confirmed' },
+        { label: 'Ledig (vakant)', value: 'vacant' },
+        { label: 'Avlyst', value: 'cancelled' },
       ],
-      defaultValue: 'ledig',
+      defaultValue: 'open',
     },
     {
-      name: 'erstatter',
-      type: 'relationship',
-      relationTo: 'users',
-      admin: {
-        description: 'Fylles ut når noen har tatt over etter meldt forfall.',
-        condition: (data) => data?.status === 'forfall_meldt',
-      },
-    },
-    {
-      name: 'notat',
-      type: 'textarea',
+      name: 'antallTrengs',
+      type: 'number',
+      defaultValue: 1,
+      admin: { description: 'Tilsvarer Task.neededCount' },
     },
   ],
 }

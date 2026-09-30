@@ -17,103 +17,408 @@ const richText = (tekst: string) => ({
   },
 })
 
+async function finnEllerOpprett<T extends { id: string | number }>(
+  payload: Awaited<ReturnType<typeof getPayload>>,
+  collection: string,
+  where: Record<string, unknown>,
+  data: Record<string, unknown>,
+): Promise<T> {
+  const { docs } = await payload.find({ collection: collection as never, where: where as never, limit: 1 })
+  if (docs.length > 0) return docs[0] as T
+  return (await payload.create({ collection: collection as never, data: data as never })) as T
+}
+
 async function main() {
   const payloadConfig = await config
   const payload = await getPayload({ config: payloadConfig })
 
-  console.log('Sår admin-bruker...')
-  const finnesFra = await payload.find({ collection: 'users', limit: 1 })
-  let adminId: string | number | undefined
-  if (finnesFra.docs.length === 0) {
-    const admin = await payload.create({
-      collection: 'users',
-      data: {
-        email: 'admin@lillesandmisjonskirke.no',
-        password: 'endre-meg-123',
-        navn: 'Administrator',
-        roller: ['administrasjon', 'lederskap'],
+  console.log('Sår personer (fra Menighetsplan sin mockData.ts)...')
+  const kari = await finnEllerOpprett<{ id: string | number }>(
+    payload,
+    'users',
+    { email: { equals: 'kari.nordmann@eksempel.no' } },
+    {
+      email: 'kari.nordmann@eksempel.no',
+      password: 'endre-meg-123',
+      navn: 'Kari Nordmann',
+      telefon: '912 34 567',
+      globalRolle: 'admin',
+    },
+  )
+  const ola = await finnEllerOpprett<{ id: string | number }>(
+    payload,
+    'users',
+    { email: { equals: 'ola.hansen@eksempel.no' } },
+    {
+      email: 'ola.hansen@eksempel.no',
+      password: 'endre-meg-123',
+      navn: 'Ola Hansen',
+      telefon: '987 65 432',
+      globalRolle: 'member',
+    },
+  )
+  const ingrid = await finnEllerOpprett<{ id: string | number }>(
+    payload,
+    'users',
+    { email: { equals: 'ingrid.berg@eksempel.no' } },
+    {
+      email: 'ingrid.berg@eksempel.no',
+      password: 'endre-meg-123',
+      navn: 'Ingrid Berg',
+      telefon: '456 78 901',
+      globalRolle: 'member',
+    },
+  )
+  const jonas = await finnEllerOpprett<{ id: string | number }>(
+    payload,
+    'users',
+    { email: { equals: 'jonas.lie@eksempel.no' } },
+    {
+      email: 'jonas.lie@eksempel.no',
+      password: 'endre-meg-123',
+      navn: 'Jonas Lie',
+      telefon: '923 45 678',
+      globalRolle: 'member',
+    },
+  )
+
+  console.log('Sår grupper (tjenestegrupper og husgruppe)...')
+  const gruppeLyd = await finnEllerOpprett<{ id: string | number }>(
+    payload,
+    'grupper',
+    { navn: { equals: 'Lyd og bilde' } },
+    {
+      navn: 'Lyd og bilde',
+      kategori: 'tjenestegruppe',
+      medlemmer: [kari.id, ola.id],
+      ledere: [ola.id],
+      varaledere: [kari.id],
+      moteplan: { ukedag: 'Søndag', klokkeslett: '09:30', frekvens: 'hver uke' },
+    },
+  )
+  const gruppeKaffe = await finnEllerOpprett<{ id: string | number }>(
+    payload,
+    'grupper',
+    { navn: { equals: 'Kirkekaffe & vertskap' } },
+    {
+      navn: 'Kirkekaffe & vertskap',
+      kategori: 'tjenestegruppe',
+      medlemmer: [kari.id, ola.id, jonas.id],
+      ledere: [kari.id],
+      varaledere: [ola.id],
+      moteplan: { ukedag: 'Søndag', klokkeslett: '10:30', frekvens: 'annenhver uke' },
+    },
+  )
+  const gruppeBarn = await finnEllerOpprett<{ id: string | number }>(
+    payload,
+    'grupper',
+    { navn: { equals: 'Søndagsskole & barn' } },
+    {
+      navn: 'Søndagsskole & barn',
+      kategori: 'tjenestegruppe',
+      medlemmer: [ingrid.id],
+      ledere: [ingrid.id],
+      varaledere: [],
+      moteplan: { ukedag: 'Søndag', klokkeslett: '11:15', frekvens: 'annenhver uke' },
+    },
+  )
+  const gruppeHus = await finnEllerOpprett<{ id: string | number }>(
+    payload,
+    'grupper',
+    { navn: { equals: 'Husfellesskap Sentrum' } },
+    {
+      navn: 'Husfellesskap Sentrum',
+      kategori: 'husgruppe',
+      medlemmer: [kari.id, ola.id, ingrid.id, jonas.id],
+      ledere: [ola.id],
+      varaledere: [kari.id],
+      moteplan: { ukedag: 'Onsdag', klokkeslett: '19:30', frekvens: 'annenhver uke' },
+    },
+  )
+
+  console.log('Sår aktiviteter (gudstjenester, arrangementer, gruppesamlinger)...')
+  type AktData = {
+    gruppe: string | number
+    tittel: string
+    start: string
+    slutt?: string
+    sted?: string
+    type: 'arrangement' | 'gruppesamling'
+    tema?: string
+    erGudstjeneste?: boolean
+    offentlig?: boolean
+  }
+  const aktiviteterData: AktData[] = [
+    {
+      gruppe: gruppeHus.id,
+      tittel: 'Husfellesskap hos Jonas',
+      start: '2026-09-09T19:30:00.000Z',
+      slutt: '2026-09-09T21:30:00.000Z',
+      sted: 'Hos Jonas Lie (Skogveien 4)',
+      type: 'gruppesamling',
+      tema: 'Nåde og tilgivelse i hverdagen',
+    },
+    {
+      gruppe: gruppeLyd.id,
+      tittel: 'Semesteroppstart & testkveld',
+      start: '2026-08-26T18:00:00.000Z',
+      slutt: '2026-08-26T20:00:00.000Z',
+      sted: 'Hovedsalen',
+      type: 'gruppesamling',
+    },
+    {
+      gruppe: gruppeKaffe.id,
+      tittel: 'Gudstjeneste & velkomstkaffe',
+      start: '2026-08-30T11:00:00.000Z',
+      slutt: '2026-08-30T13:00:00.000Z',
+      sted: 'Hovedsalen og kafeen',
+      type: 'arrangement',
+      erGudstjeneste: true,
+      offentlig: true,
+    },
+    {
+      gruppe: gruppeKaffe.id,
+      tittel: 'Gudstjeneste & dåp',
+      start: '2026-09-06T11:00:00.000Z',
+      slutt: '2026-09-06T13:00:00.000Z',
+      sted: 'Hovedsalen og kafeen',
+      type: 'arrangement',
+      erGudstjeneste: true,
+      offentlig: true,
+    },
+    {
+      gruppe: gruppeBarn.id,
+      tittel: 'Søndagsskole semesteroppstart',
+      start: '2026-09-06T11:15:00.000Z',
+      slutt: '2026-09-06T12:30:00.000Z',
+      sted: 'Kjellersalen',
+      type: 'arrangement',
+    },
+    {
+      gruppe: gruppeLyd.id,
+      tittel: 'Ungdomsmøte & lovsang',
+      start: '2026-09-11T19:00:00.000Z',
+      slutt: '2026-09-11T21:00:00.000Z',
+      sted: 'Ungdomssalen',
+      type: 'arrangement',
+      offentlig: true,
+    },
+    {
+      gruppe: gruppeKaffe.id,
+      tittel: 'Høstgudstjeneste & kirkelunsj',
+      start: '2026-09-13T11:00:00.000Z',
+      slutt: '2026-09-13T13:00:00.000Z',
+      sted: 'Hovedsalen og kafeen',
+      type: 'arrangement',
+      erGudstjeneste: true,
+      offentlig: true,
+    },
+    {
+      gruppe: gruppeLyd.id,
+      tittel: 'Lydteknisk opplæring & rigging',
+      start: '2026-09-22T19:00:00.000Z',
+      slutt: '2026-09-22T21:00:00.000Z',
+      sted: 'Hovedsalen',
+      type: 'gruppesamling',
+    },
+    {
+      gruppe: gruppeLyd.id,
+      tittel: 'Familiegudstjeneste & barnekor',
+      start: '2026-09-27T11:00:00.000Z',
+      slutt: '2026-09-27T12:30:00.000Z',
+      sted: 'Hovedsalen',
+      type: 'arrangement',
+      erGudstjeneste: true,
+      offentlig: true,
+    },
+  ]
+
+  const aktIder: Record<string, string | number> = {}
+  for (const a of aktiviteterData) {
+    const opprettet = await finnEllerOpprett<{ id: string | number }>(
+      payload,
+      'aktiviteter',
+      { tittel: { equals: a.tittel }, start: { equals: a.start } },
+      {
+        gruppe: a.gruppe,
+        tittel: a.tittel,
+        start: a.start,
+        slutt: a.slutt,
+        sted: a.sted,
+        type: a.type,
+        tema: a.tema,
+        erGudstjeneste: a.erGudstjeneste || false,
+        offentlig: a.offentlig || false,
+        avlyst: false,
       },
-    })
-    adminId = admin.id
-  } else {
-    adminId = finnesFra.docs[0].id
+    )
+    aktIder[a.tittel] = opprettet.id
   }
 
-  console.log('Sår gruppeleder...')
-  const { docs: eksisterendeGruppeleder } = await payload.find({
-    collection: 'users',
-    where: { email: { equals: 'gruppeleder@lillesandmisjonskirke.no' } },
-    limit: 1,
-  })
-  const gruppeleder =
-    eksisterendeGruppeleder[0] ||
-    (await payload.create({
-      collection: 'users',
-      data: {
-        email: 'gruppeleder@lillesandmisjonskirke.no',
-        password: 'endre-meg-123',
-        navn: 'Kari Gruppeleder',
-        roller: ['gruppeleder', 'medlem'],
-      },
-    }))
+  console.log('Sår oppgaver og tildelinger (dekket/mangler/forfall)...')
+  type OppgData = {
+    aktivitet: string | number
+    gruppe: string | number
+    tittel: string
+    status: 'open' | 'assigned' | 'confirmed' | 'vacant' | 'cancelled'
+    tildeltTil?: string | number
+    svar?: 'pending' | 'confirmed' | 'declined' | 'withdrawn'
+  }
+  const oppgaverData: OppgData[] = [
+    {
+      aktivitet: aktIder['Semesteroppstart & testkveld'],
+      gruppe: gruppeLyd.id,
+      tittel: 'Teknisk riggansvarlig',
+      status: 'confirmed',
+      tildeltTil: ola.id,
+      svar: 'confirmed',
+    },
+    {
+      aktivitet: aktIder['Gudstjeneste & velkomstkaffe'],
+      gruppe: gruppeKaffe.id,
+      tittel: 'Velkomstkaffe vert',
+      status: 'confirmed',
+      tildeltTil: kari.id,
+      svar: 'confirmed',
+    },
+    {
+      aktivitet: aktIder['Gudstjeneste & dåp'],
+      gruppe: gruppeLyd.id,
+      tittel: 'Lydtekniker søndag',
+      status: 'confirmed',
+      tildeltTil: ola.id,
+      svar: 'confirmed',
+    },
+    {
+      aktivitet: aktIder['Gudstjeneste & dåp'],
+      gruppe: gruppeLyd.id,
+      tittel: 'Prosjektor & streaming',
+      status: 'confirmed',
+      tildeltTil: kari.id,
+      svar: 'confirmed',
+    },
+    {
+      aktivitet: aktIder['Gudstjeneste & dåp'],
+      gruppe: gruppeLyd.id,
+      tittel: 'Kamerastyring',
+      status: 'vacant',
+    },
+    {
+      aktivitet: aktIder['Ungdomsmøte & lovsang'],
+      gruppe: gruppeLyd.id,
+      tittel: 'Lovsang med ungdomsbandet',
+      status: 'vacant',
+    },
+    {
+      aktivitet: aktIder['Høstgudstjeneste & kirkelunsj'],
+      gruppe: gruppeKaffe.id,
+      tittel: 'Felles varm høstlunsj i kafeen',
+      status: 'vacant',
+    },
+    {
+      aktivitet: aktIder['Familiegudstjeneste & barnekor'],
+      gruppe: gruppeLyd.id,
+      tittel: 'Barnekor opptreden (flere mikrofoner)',
+      status: 'assigned',
+      tildeltTil: ola.id,
+      svar: 'pending',
+    },
+    {
+      aktivitet: aktIder['Søndagsskole semesteroppstart'],
+      gruppe: gruppeBarn.id,
+      tittel: 'Lede formingsaktivitet',
+      status: 'confirmed',
+      tildeltTil: ingrid.id,
+      svar: 'confirmed',
+    },
+  ]
 
-  console.log('Sår grupper...')
-  const { docs: eksisterendeGrupper } = await payload.find({ collection: 'grupper', limit: 1 })
-  if (eksisterendeGrupper.length === 0) {
-    await payload.create({
-      collection: 'grupper',
-      data: {
-        navn: 'Lovsangsteamet',
-        type: 'tjenestegruppe',
-        beskrivelse: 'Ansvarlig for musikk og lovsang på gudstjenester.',
-        gruppeleder: gruppeleder.id,
-        medlemmer: [gruppeleder.id],
+  for (const o of oppgaverData) {
+    const oppgave = await finnEllerOpprett<{ id: string | number }>(
+      payload,
+      'oppgaver',
+      { tittel: { equals: o.tittel }, aktivitet: { equals: o.aktivitet } },
+      {
+        aktivitet: o.aktivitet,
+        gruppe: o.gruppe,
+        tittel: o.tittel,
+        status: o.status,
+        antallTrengs: 1,
       },
-    })
-    await payload.create({
-      collection: 'grupper',
-      data: {
-        navn: 'Husgruppe sentrum',
-        type: 'husgruppe',
-        beskrivelse: 'Samles annenhver tirsdag i sentrum.',
-        gruppeleder: gruppeleder.id,
-        medlemmer: [gruppeleder.id],
-      },
-    })
+    )
+    if (o.tildeltTil) {
+      await finnEllerOpprett(
+        payload,
+        'tildelinger',
+        { oppgave: { equals: oppgave.id }, person: { equals: o.tildeltTil } },
+        { oppgave: oppgave.id, person: o.tildeltTil, svar: o.svar || 'pending' },
+      )
+    }
   }
 
-  console.log('Sår sider...')
+  console.log('Sår gruppemeldinger...')
+  const meldinger = [
+    {
+      gruppe: gruppeKaffe.id,
+      avsender: kari.id,
+      innhold:
+        'Velkommen til nytt semester i kaffegruppen! Husk å sjekke datoene dine for september og høsten.',
+    },
+    {
+      gruppe: gruppeLyd.id,
+      avsender: ola.id,
+      innhold: 'Vi har en teknisk opplæringskveld tirsdag 22. september kl. 19:00. Vel møtt!',
+    },
+    {
+      gruppe: gruppeHus.id,
+      avsender: ola.id,
+      innhold:
+        'Gleder meg til høstsemesteret i husfellesskapet vårt! Vi starter opp hos Jonas onsdag 9. september kl. 19:30.',
+    },
+    {
+      gruppe: gruppeHus.id,
+      avsender: jonas.id,
+      innhold: 'Velkommen hjem til oss! Jeg setter over kaffe og te.',
+    },
+  ]
+  for (const m of meldinger) {
+    const { docs } = await payload.find({
+      collection: 'gruppemeldinger',
+      where: { gruppe: { equals: m.gruppe }, avsender: { equals: m.avsender }, innhold: { equals: m.innhold } },
+      limit: 1,
+    })
+    if (docs.length === 0) {
+      await payload.create({ collection: 'gruppemeldinger', data: m })
+    }
+  }
+
+  console.log('Sår faste sider (om-oss/barn-og-unge/kontakt)...')
   const sider = [
     {
       slug: 'om-oss',
       tittel: 'Om oss',
       rekkefolge: 1,
       tekst:
-        'Lillesand Misjonskirke er en del av det globale misjonsarbeidet. Vi fokuserer på å bygge en levende menighet basert på evangeliet.\n\nVårt fokus:\n- Prediking og bibelstudie\n- Diakoni og hjelp til nødlidende\n- Misjon og evangelisering\n- Menighetsfellesskap\n\nVi arbeider med både lokale og internasjonale prosjekter for å gjøre en positiv forskjell i verden.',
+        'Lillesand Misjonskirke er en del av det globale misjonsarbeidet. Vi fokuserer på å bygge en levende menighet basert på evangeliet.\n\nVi arbeider med både lokale og internasjonale prosjekter for å gjøre en positiv forskjell i verden.',
     },
     {
       slug: 'barn-og-unge',
       tittel: 'Barn og unge',
       rekkefolge: 2,
       tekst:
-        'Vi tilbyr aktiviteter for barn og unge fra barnehagealder og oppover. Alle er velkommen til å delta i våre program og arrangementer.\n\nAktiviteter:\n- Søndagsskole for barn\n- Ungdomsgruppe på fredager\n- Sommerleirsamling\n- Bibelstudie og spirituell dybde\n\nTakk for at dere tar del i menighetslivet vårt! For mer informasjon, kontakt oss på kontakt@lillesand-misjon.no',
+        'Vi tilbyr aktiviteter for barn og unge fra barnehagealder og oppover. Alle er velkommen til å delta i våre program og arrangementer.',
     },
     {
       slug: 'kontakt',
       tittel: 'Kontakt',
       rekkefolge: 3,
       tekst:
-        'Har du spørsmål eller ønsker å komme i kontakt med oss? Vi setter pris på å høre fra deg.\n\nKontaktinformasjon:\nE-post: kontakt@lillesand-misjon.no\nTelefon: +47 37 27 03 80\nAdresse: Lillesand Misjonskirke, Lillesand, Norge\n\nVi holder gudstjenester hver søndag kl. 11:00. Alle er velkomne!',
+        'Har du spørsmål eller ønsker å komme i kontakt med oss? Vi setter pris på å høre fra deg.\n\nVi holder gudstjenester hver søndag kl. 11:00. Alle er velkomne!',
     },
   ]
-
   for (const side of sider) {
-    const { docs: eksisterende } = await payload.find({
-      collection: 'sider',
-      where: { slug: { equals: side.slug } },
-      limit: 1,
-    })
-    if (eksisterende.length > 0) continue
+    const { docs } = await payload.find({ collection: 'sider', where: { slug: { equals: side.slug } }, limit: 1 })
+    if (docs.length > 0) continue
     await payload.create({
       collection: 'sider',
       data: {
@@ -121,121 +426,14 @@ async function main() {
         slug: side.slug,
         visIMeny: true,
         rekkefolge: side.rekkefolge,
-        blokker: [
-          {
-            blockType: 'tekst',
-            innhold: richText(side.tekst),
-          },
-        ],
+        blokker: [{ blockType: 'tekst', innhold: richText(side.tekst) }],
       },
     })
   }
 
-  console.log('Sår aktiviteter...')
-  const aktiviteter = [
-    {
-      tittel: 'Gudstjeneste',
-      type: 'gudstjeneste' as const,
-      datoStart: '2026-10-04T09:00:00.000Z',
-      datoSlutt: '2026-10-04T10:30:00.000Z',
-      sted: 'Lillesand Misjonskirke',
-      beskrivelse: 'Tema: Guds rike er nær. Tekst: Mark 1,14–15',
-      status: 'planlagt' as const,
-    },
-    {
-      tittel: 'Gudstjeneste',
-      type: 'gudstjeneste' as const,
-      datoStart: '2026-10-11T09:00:00.000Z',
-      datoSlutt: '2026-10-11T10:30:00.000Z',
-      sted: 'Lillesand Misjonskirke',
-      beskrivelse: 'Tema: Tro i hverdagen. Tekst: Jak 2,14–17',
-      status: 'planlagt' as const,
-    },
-    {
-      tittel: 'Høstbasar',
-      type: 'arrangement' as const,
-      datoStart: '2026-10-24T10:00:00.000Z',
-      datoSlutt: '2026-10-24T13:00:00.000Z',
-      sted: 'Lillesand Misjonskirke',
-      beskrivelse: 'Loddsalg, kafé og aktiviteter for barna.',
-      status: 'avlyst' as const,
-      tagger: ['Familie'],
-    },
-    {
-      tittel: 'Familiegudstjeneste',
-      type: 'gudstjeneste' as const,
-      datoStart: '2026-11-01T10:00:00.000Z',
-      datoSlutt: '2026-11-01T11:15:00.000Z',
-      sted: 'Lillesand Misjonskirke',
-      beskrivelse: 'Tema: Takk for maten',
-      status: 'planlagt' as const,
-    },
-    {
-      tittel: 'Kulturnatta',
-      type: 'arrangement' as const,
-      datoStart: '2026-11-13T17:00:00.000Z',
-      datoSlutt: '2026-11-13T21:00:00.000Z',
-      sted: 'Lillesand Misjonskirke',
-      beskrivelse: 'Åpen kirke med konsert og kveldsmat.',
-      status: 'planlagt' as const,
-      tagger: ['Konsert'],
-    },
-  ]
-
-  const opprettedeAktiviteter: (string | number)[] = []
-  for (const a of aktiviteter) {
-    const { docs: eksisterende } = await payload.find({
-      collection: 'aktiviteter',
-      where: { tittel: { equals: a.tittel }, datoStart: { equals: a.datoStart } },
-      limit: 1,
-    })
-    if (eksisterende.length > 0) {
-      opprettedeAktiviteter.push(eksisterende[0].id)
-      continue
-    }
-    const opprettet = await payload.create({
-      collection: 'aktiviteter',
-      data: {
-        tittel: a.tittel,
-        type: a.type,
-        datoStart: a.datoStart,
-        datoSlutt: a.datoSlutt,
-        sted: a.sted,
-        beskrivelse: a.beskrivelse,
-        ansvarlig: adminId,
-        offentlig: true,
-        status: a.status,
-        tagger: (a.tagger || []).map((verdi) => ({ verdi })),
-      },
-    })
-    opprettedeAktiviteter.push(opprettet.id)
-  }
-
-  console.log('Sår oppgaver...')
-  if (opprettedeAktiviteter[0]) {
-    const { docs: eksisterendeOppgaver } = await payload.find({ collection: 'oppgaver', limit: 1 })
-    if (eksisterendeOppgaver.length === 0) {
-      await payload.create({
-        collection: 'oppgaver',
-        data: {
-          tittel: 'Lovsangsleder',
-          aktivitet: opprettedeAktiviteter[0],
-          tildeltTil: gruppeleder.id,
-          status: 'bemannet',
-        },
-      })
-      await payload.create({
-        collection: 'oppgaver',
-        data: {
-          tittel: 'Tekniker (lyd/bilde)',
-          aktivitet: opprettedeAktiviteter[0],
-          status: 'ledig',
-        },
-      })
-    }
-  }
-
-  console.log('Ferdig. Admin: admin@lillesandmisjonskirke.no / endre-meg-123')
+  console.log('Ferdig.')
+  console.log('Admin (globalRolle=admin): kari.nordmann@eksempel.no / endre-meg-123')
+  console.log('Gruppeleder-eksempel (leder Lyd og bilde + Kirkekaffe): ola.hansen@eksempel.no / endre-meg-123')
   process.exit(0)
 }
 

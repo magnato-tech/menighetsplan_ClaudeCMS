@@ -5,7 +5,7 @@ export const Grupper: CollectionConfig = {
   labels: { singular: 'Gruppe', plural: 'Grupper' },
   admin: {
     useAsTitle: 'navn',
-    defaultColumns: ['navn', 'type', 'gruppeleder'],
+    defaultColumns: ['navn', 'kategori', 'ledere'],
   },
   access: {
     read: () => true,
@@ -17,30 +17,68 @@ export const Grupper: CollectionConfig = {
       required: true,
     },
     {
-      name: 'type',
+      name: 'kategori',
       type: 'select',
       options: [
-        { label: 'Husgruppe', value: 'husgruppe' },
         { label: 'Tjenestegruppe', value: 'tjenestegruppe' },
+        { label: 'Husgruppe', value: 'husgruppe' },
         { label: 'Strategigruppe', value: 'strategigruppe' },
-        { label: 'Annet fellesskap', value: 'annet' },
+        { label: 'Ledergruppe', value: 'ledergruppe' },
       ],
-      required: true,
-    },
-    {
-      name: 'beskrivelse',
-      type: 'textarea',
-    },
-    {
-      name: 'gruppeleder',
-      type: 'relationship',
-      relationTo: 'users',
     },
     {
       name: 'medlemmer',
       type: 'relationship',
       relationTo: 'users',
       hasMany: true,
+    },
+    {
+      name: 'ledere',
+      type: 'relationship',
+      relationTo: 'users',
+      hasMany: true,
+      admin: {
+        description: 'Tilsvarer Group.leaderIds — vises som "Leder"/"Hovedleder" på Min side.',
+      },
+    },
+    {
+      name: 'varaledere',
+      type: 'relationship',
+      relationTo: 'users',
+      hasMany: true,
+      admin: {
+        description: 'Tilsvarer Group.deputyLeaderIds — vises som "Nestleder" på Min side.',
+      },
+    },
+    {
+      name: 'moteplan',
+      type: 'group',
+      label: 'Fast møteplan',
+      fields: [
+        {
+          name: 'ukedag',
+          type: 'select',
+          options: [
+            'Mandag',
+            'Tirsdag',
+            'Onsdag',
+            'Torsdag',
+            'Fredag',
+            'Lørdag',
+            'Søndag',
+          ].map((d) => ({ label: d, value: d })),
+        },
+        { name: 'klokkeslett', type: 'text', admin: { placeholder: '09:30' } },
+        {
+          name: 'frekvens',
+          type: 'select',
+          options: [
+            { label: 'Hver uke', value: 'hver uke' },
+            { label: 'Annenhver uke', value: 'annenhver uke' },
+            { label: 'Hver måned', value: 'hver måned' },
+          ],
+        },
+      ],
     },
   ],
 }

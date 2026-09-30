@@ -73,6 +73,9 @@ export interface Config {
     aktiviteter: Aktiviteter;
     grupper: Grupper;
     oppgaver: Oppgaver;
+    tildelinger: Tildelinger;
+    gruppemeldinger: Gruppemeldinger;
+    oppmoter: Oppmoter;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -86,6 +89,9 @@ export interface Config {
     aktiviteter: AktiviteterSelect<false> | AktiviteterSelect<true>;
     grupper: GrupperSelect<false> | GrupperSelect<true>;
     oppgaver: OppgaverSelect<false> | OppgaverSelect<true>;
+    tildelinger: TildelingerSelect<false> | TildelingerSelect<true>;
+    gruppemeldinger: GruppemeldingerSelect<false> | GruppemeldingerSelect<true>;
+    oppmoter: OppmoterSelect<false> | OppmoterSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -133,9 +139,9 @@ export interface User {
   id: number;
   navn: string;
   /**
-   * Styrer hva brukeren ser og kan gjøre på Min side / i admin. En bruker kan ha flere roller.
+   * Tilsvarer Person.globalRole i Menighetsplan-appen. Om noen er gruppeleder styres av Grupper.ledere/varaledere, ikke av et felt her.
    */
-  roller?: ('administrasjon' | 'lederskap' | 'gruppeleder' | 'frivillig' | 'medlem')[] | null;
+  globalRolle: 'member' | 'admin';
   telefon?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -238,21 +244,29 @@ export interface Sider {
  */
 export interface Aktiviteter {
   id: number;
+  gruppe: number | Grupper;
   tittel: string;
-  type: 'gudstjeneste' | 'arrangement' | 'mote' | 'bonn' | 'annet';
-  datoStart: string;
-  datoSlutt?: string | null;
+  start: string;
+  slutt?: string | null;
   sted?: string | null;
-  beskrivelse?: string | null;
-  ansvarlig?: (number | null) | User;
+  type?: ('arrangement' | 'gruppesamling') | null;
+  tema?: string | null;
+  bibeltekst?: string | null;
+  vert?: (number | null) | User;
+  invitasjonSendt?: boolean | null;
+  invitasjonSendtDato?: string | null;
   /**
-   * Vises på den offentlige nettsiden når denne er huket av.
+   * Tilsvarer Gathering.isPublic — vises på den offentlige nettsiden når huket av.
    */
   offentlig?: boolean | null;
-  status?: ('planlagt' | 'avlyst') | null;
-  tagger?:
+  erGudstjeneste?: boolean | null;
+  avlyst?: boolean | null;
+  program?:
     | {
-        verdi?: string | null;
+        klokkeslett: string;
+        tittel: string;
+        beskrivelse?: string | null;
+        oppgave?: (number | null) | Oppgaver;
         id?: string | null;
       }[]
     | null;
@@ -266,10 +280,21 @@ export interface Aktiviteter {
 export interface Grupper {
   id: number;
   navn: string;
-  type: 'husgruppe' | 'tjenestegruppe' | 'strategigruppe' | 'annet';
-  beskrivelse?: string | null;
-  gruppeleder?: (number | null) | User;
+  kategori?: ('tjenestegruppe' | 'husgruppe' | 'strategigruppe' | 'ledergruppe') | null;
   medlemmer?: (number | User)[] | null;
+  /**
+   * Tilsvarer Group.leaderIds — vises som "Leder"/"Hovedleder" på Min side.
+   */
+  ledere?: (number | User)[] | null;
+  /**
+   * Tilsvarer Group.deputyLeaderIds — vises som "Nestleder" på Min side.
+   */
+  varaledere?: (number | User)[] | null;
+  moteplan?: {
+    ukedag?: ('Mandag' | 'Tirsdag' | 'Onsdag' | 'Torsdag' | 'Fredag' | 'Lørdag' | 'Søndag') | null;
+    klokkeslett?: string | null;
+    frekvens?: ('hver uke' | 'annenhver uke' | 'hver måned') | null;
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -279,15 +304,53 @@ export interface Grupper {
  */
 export interface Oppgaver {
   id: number;
-  tittel: string;
   aktivitet: number | Aktiviteter;
-  tildeltTil?: (number | null) | User;
-  status?: ('ledig' | 'bemannet' | 'forfall_meldt' | 'fullfort') | null;
+  gruppe: number | Grupper;
+  tittel: string;
+  beskrivelse?: string | null;
+  instruksjon?: string | null;
+  status?: ('open' | 'assigned' | 'confirmed' | 'vacant' | 'cancelled') | null;
   /**
-   * Fylles ut når noen har tatt over etter meldt forfall.
+   * Tilsvarer Task.neededCount
    */
-  erstatter?: (number | null) | User;
-  notat?: string | null;
+  antallTrengs?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tildelinger".
+ */
+export interface Tildelinger {
+  id: number;
+  oppgave: number | Oppgaver;
+  person: number | User;
+  svar?: ('pending' | 'confirmed' | 'declined' | 'withdrawn') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gruppemeldinger".
+ */
+export interface Gruppemeldinger {
+  id: number;
+  gruppe: number | Grupper;
+  avsender: number | User;
+  innhold: string;
+  bilde?: (number | null) | Media;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "oppmoter".
+ */
+export interface Oppmoter {
+  id: number;
+  aktivitet: number | Aktiviteter;
+  person: number | User;
+  status: 'attending' | 'declined';
   updatedAt: string;
   createdAt: string;
 }
@@ -338,6 +401,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'oppgaver';
         value: number | Oppgaver;
+      } | null)
+    | ({
+        relationTo: 'tildelinger';
+        value: number | Tildelinger;
+      } | null)
+    | ({
+        relationTo: 'gruppemeldinger';
+        value: number | Gruppemeldinger;
+      } | null)
+    | ({
+        relationTo: 'oppmoter';
+        value: number | Oppmoter;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -387,7 +462,7 @@ export interface PayloadMigration {
  */
 export interface UsersSelect<T extends boolean = true> {
   navn?: T;
-  roller?: T;
+  globalRolle?: T;
   telefon?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -468,19 +543,27 @@ export interface SiderSelect<T extends boolean = true> {
  * via the `definition` "aktiviteter_select".
  */
 export interface AktiviteterSelect<T extends boolean = true> {
+  gruppe?: T;
   tittel?: T;
-  type?: T;
-  datoStart?: T;
-  datoSlutt?: T;
+  start?: T;
+  slutt?: T;
   sted?: T;
-  beskrivelse?: T;
-  ansvarlig?: T;
+  type?: T;
+  tema?: T;
+  bibeltekst?: T;
+  vert?: T;
+  invitasjonSendt?: T;
+  invitasjonSendtDato?: T;
   offentlig?: T;
-  status?: T;
-  tagger?:
+  erGudstjeneste?: T;
+  avlyst?: T;
+  program?:
     | T
     | {
-        verdi?: T;
+        klokkeslett?: T;
+        tittel?: T;
+        beskrivelse?: T;
+        oppgave?: T;
         id?: T;
       };
   updatedAt?: T;
@@ -492,10 +575,17 @@ export interface AktiviteterSelect<T extends boolean = true> {
  */
 export interface GrupperSelect<T extends boolean = true> {
   navn?: T;
-  type?: T;
-  beskrivelse?: T;
-  gruppeleder?: T;
+  kategori?: T;
   medlemmer?: T;
+  ledere?: T;
+  varaledere?: T;
+  moteplan?:
+    | T
+    | {
+        ukedag?: T;
+        klokkeslett?: T;
+        frekvens?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -504,12 +594,47 @@ export interface GrupperSelect<T extends boolean = true> {
  * via the `definition` "oppgaver_select".
  */
 export interface OppgaverSelect<T extends boolean = true> {
-  tittel?: T;
   aktivitet?: T;
-  tildeltTil?: T;
+  gruppe?: T;
+  tittel?: T;
+  beskrivelse?: T;
+  instruksjon?: T;
   status?: T;
-  erstatter?: T;
-  notat?: T;
+  antallTrengs?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tildelinger_select".
+ */
+export interface TildelingerSelect<T extends boolean = true> {
+  oppgave?: T;
+  person?: T;
+  svar?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gruppemeldinger_select".
+ */
+export interface GruppemeldingerSelect<T extends boolean = true> {
+  gruppe?: T;
+  avsender?: T;
+  innhold?: T;
+  bilde?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "oppmoter_select".
+ */
+export interface OppmoterSelect<T extends boolean = true> {
+  aktivitet?: T;
+  person?: T;
+  status?: T;
   updatedAt?: T;
   createdAt?: T;
 }
