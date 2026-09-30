@@ -480,6 +480,54 @@ async function main() {
     })
   }
 
+  console.log('Sår "Vårt arbeid"-meny og flytter Barn og unge dit...')
+  const { docs: eksisterendeVartArbeid } = await payload.find({ collection: 'sider', where: { slug: { equals: 'vart-arbeid' } }, limit: 1 })
+  let vartArbeidId: number
+  if (eksisterendeVartArbeid.length > 0) {
+    vartArbeidId = eksisterendeVartArbeid[0].id as number
+  } else {
+    const opprettet = await payload.create({
+      collection: 'sider',
+      data: {
+        tittel: 'Vårt arbeid',
+        slug: 'vart-arbeid',
+        visIMeny: true,
+        rekkefolge: 4,
+        blokker: [{ blockType: 'tekst', innhold: richText('[PLASSHOLDER] Oversikt over menighetens ulike arbeidsgrener og tilbud.') }],
+      },
+    })
+    vartArbeidId = opprettet.id as number
+  }
+
+  const { docs: barnDocs } = await payload.find({ collection: 'sider', where: { slug: { equals: 'barn-og-unge' } }, limit: 1 })
+  if (barnDocs.length > 0 && !barnDocs[0].foreldreside) {
+    await payload.update({
+      collection: 'sider',
+      id: barnDocs[0].id,
+      data: { foreldreside: vartArbeidId, rekkefolge: 1 },
+    })
+  }
+
+  const vartArbeidUndersider = [
+    { slug: 'gudstjeneste', tittel: 'Gudstjeneste', rekkefolge: 2, tekst: '[PLASSHOLDER] Om gudstjenestene våre: tid, sted og hva som skjer.' },
+    { slug: 'husgrupper', tittel: 'Husgrupper', rekkefolge: 3, tekst: '[PLASSHOLDER] Om husgruppene/cellegruppene og hvordan man blir med.' },
+  ]
+  for (const u of vartArbeidUndersider) {
+    const { docs } = await payload.find({ collection: 'sider', where: { slug: { equals: u.slug } }, limit: 1 })
+    if (docs.length > 0) continue
+    await payload.create({
+      collection: 'sider',
+      data: {
+        tittel: u.tittel,
+        slug: u.slug,
+        visIMeny: true,
+        rekkefolge: u.rekkefolge,
+        foreldreside: vartArbeidId,
+        blokker: [{ blockType: 'tekst', innhold: richText(u.tekst) }],
+      },
+    })
+  }
+
   console.log('Ferdig.')
   console.log('Admin (globalRolle=admin): kari.nordmann@eksempel.no / endre-meg-123')
   console.log('Gruppeleder-eksempel (leder Lyd og bilde + Kirkekaffe): ola.hansen@eksempel.no / endre-meg-123')
