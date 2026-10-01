@@ -78,7 +78,7 @@ async function seedFirestoreData() {
 
 // Seed Storage-filer med security rules disabled
 async function seedStorageData() {
-  const adminStorage = testEnv.withSecurityRulesDisabled(async (context) => {
+  await testEnv.withSecurityRulesDisabled(async (context) => {
     const storage = context.storage();
     const logoRef = ref(storage, 'public/logo.png');
     const logoData = new Uint8Array([0x89, 0x50, 0x4e, 0x47]); // PNG header
@@ -135,7 +135,7 @@ describe('Storage: Gruppechat-bilder', () => {
 
   it('Test Storage 2.2: memberA kan lese groups/gA/chat/a.png', async () => {
     // Seed filen først
-    const adminStorage = testEnv.withSecurityRulesDisabled(async (context) => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
       const storage = context.storage();
       const fileRef = ref(storage, 'groups/gA/chat/a.png');
       const data = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
@@ -149,7 +149,7 @@ describe('Storage: Gruppechat-bilder', () => {
 
   it('Test Storage 2.3: memberB kan IKKE lese groups/gA/chat/a.png', async () => {
     // Seed filen først
-    const adminStorage = testEnv.withSecurityRulesDisabled(async (context) => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
       const storage = context.storage();
       const fileRef = ref(storage, 'groups/gA/chat/a.png');
       const data = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
@@ -210,7 +210,7 @@ describe('Storage: Profilbilder', () => {
 
   it('Test Storage 3.3: innlogget memberA kan lese profiles/p-memberA/me.png', async () => {
     // Seed filen først
-    const adminStorage = testEnv.withSecurityRulesDisabled(async (context) => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
       const storage = context.storage();
       const fileRef = ref(storage, 'profiles/p-memberA/me.png');
       const data = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
@@ -224,7 +224,7 @@ describe('Storage: Profilbilder', () => {
 
   it('Test Storage 3.4: innlogget memberA2 kan lese profiles/p-memberA/me.png', async () => {
     // Seed filen først
-    const adminStorage = testEnv.withSecurityRulesDisabled(async (context) => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
       const storage = context.storage();
       const fileRef = ref(storage, 'profiles/p-memberA/me.png');
       const data = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
@@ -238,7 +238,7 @@ describe('Storage: Profilbilder', () => {
 
   it('Test Storage 3.5: anon kan IKKE lese profiles/p-memberA/me.png', async () => {
     // Seed filen først
-    const adminStorage = testEnv.withSecurityRulesDisabled(async (context) => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
       const storage = context.storage();
       const fileRef = ref(storage, 'profiles/p-memberA/me.png');
       const data = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
@@ -252,7 +252,7 @@ describe('Storage: Profilbilder', () => {
 
   it('Test Storage 3.6: admin kan slette groups/gA/chat/a.png', async () => {
     // Seed filen først
-    const adminStorage = testEnv.withSecurityRulesDisabled(async (context) => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
       const storage = context.storage();
       const fileRef = ref(storage, 'groups/gA/chat/a.png');
       const data = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
@@ -266,7 +266,7 @@ describe('Storage: Profilbilder', () => {
 
   it('Test Storage 3.7: memberA kan IKKE slette groups/gA/chat/a.png', async () => {
     // Seed filen først
-    const adminStorage = testEnv.withSecurityRulesDisabled(async (context) => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
       const storage = context.storage();
       const fileRef = ref(storage, 'groups/gA/chat/a.png');
       const data = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);

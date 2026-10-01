@@ -278,7 +278,7 @@ Tatt uten PO til stede, for å komme videre. Kan endres.
 5. **`gatherings`: felt `public` og `groupId`.** `public: true` = lesbart for alle. `groupId: null` = felles for menigheten (bare admin skriver). Vanlige innloggede leser felles arrangementer.
 6. **Tildelinger:** ID = `taskId_pid`. Medlem kan opprette egen tildeling (`pending`/`confirmed`) og endre egen til `confirmed`/`declined`/`withdrawn`. Leder/admin kan sette alle gyldige statuser. `taskId`, `groupId`, `pid` er uforanderlige.
 7. **Kjente begrensninger:** `slots` kan ikke håndheves av regler. `gatherings` må spørres per gruppe. Ingen rate limiting. Se `README.md` i regelprosjektet.
-8. **Status: reglene er skrevet, men regeltestene er ikke kjørt** (Java mangler for emulatoren). Ren logikk (`gruppeLogikk`, `aktivitetStatus` med rettet Forfall-logikk): 40 tester kjørt og grønne.
+8. **Status 2026-10-01: regeltestene er kjørt og består (144 av 144: 127 Firestore, 17 Storage).** Ren logikk (`gruppeLogikk`, `aktivitetStatus` med rettet Forfall-logikk): 40 av 40. Mutasjonstest: 10 med vilje svekkede regler ble alle fanget av testene. Reglene er likevel utkast til de er prøvd mot et ekte Firebase-prosjekt og serverkoden (claims) er skrevet og testet.
 
 ## 11. Arbeidsregel og byggerekkefølge
 

@@ -1,27 +1,34 @@
 # Firebase: Security Rules og tester (utkast)
 
-**Status 2026-10-01 natt: reglene er skrevet, men regeltestene er IKKE kjørt.** Firestore/Storage-emulatoren krever Java (JDK 21+), og Java finnes ikke på denne maskinen. Reglene regnes derfor ikke som verifisert.
+**Status 2026-10-01: regeltestene er KJØRT mot Firebase-emulatoren og består (144 av 144).** Reglene er likevel fortsatt utkast: de er ikke prøvd mot ekte brukere eller et ekte Firebase-prosjekt, og kjente begrensninger står under.
 
 | Del | Status |
 |---|---|
-| `src/logic` + `tests/logic` (40 tester, ren TypeScript) | Kjørt: 40 grønne, `tsc --noEmit` ren |
-| `firestore.rules`, `storage.rules` | Skrevet, **ikke kjørt** |
-| `tests/rules/*.mjs` (127 + 17 tester) | Skrevet av Haiku, gjennomgått og rettet av Claude, **ikke kjørt** |
+| `src/logic` + `tests/logic` (ren TypeScript) | Kjørt: 40 grønne, `tsc --noEmit` ren |
+| `firestore.rules` | Kjørt: 127 tester grønne |
+| `storage.rules` | Kjørt: 17 tester grønne |
+| Mutasjonstest | 10 med vilje svekkede regler ble alle fanget av minst én test |
+
+Testene ble først skrevet av Haiku. Claude rettet to feil i testene: seeding med reglene på (Firestore) og manglende `await` ved seeding av Storage-filer. Ingen regler ble svekket for å få testene grønne. Eneste regelendring: `pages`/`news` bruker `resource.data.status` direkte i stedet for `.get()`.
 
 ## Kjøre
 
 ```
 npm install
-npm run test:logic       # fungerer uten Java
+npm run test:logic       # ren logikk, trenger ikke Java
 npm run typecheck
-npm run test:rules       # krever Java 21+ i PATH
+npm run test:rules       # krever Java 21+ i PATH (Temurin 21 er testet)
 ```
 
-`test:rules` starter emulatoren selv (`firebase emulators:exec`, prosjekt `demo-menighetsplan`). Ingen Firebase-konto eller nett er nødvendig utover nedlasting av emulator-filen første gang.
+`test:rules` starter emulatoren selv (`firebase emulators:exec`, prosjekt `demo-menighetsplan`). Ingen Firebase-konto er nødvendig. Første kjøring laster ned emulator-filen.
 
-## For å få Java (beslutning trengs fra PO)
+### Windows-tips
 
-Enklest uten systemendringer: last ned en bærbar JDK (Temurin 21, zip, ca. 200 MB) til en mappe og sett `JAVA_HOME`/PATH for økten. Alternativ: installer via `winget install EclipseAdoptium.Temurin.21.JDK`.
+Emulatoren feiler med «Unable to establish loopback connection» hvis stien til temp-mappen er lang (grensen for unix-sockets er ca. 108 tegn). Sett en kort temp-mappe før kjøring:
+
+```powershell
+$env:TEMP="C:\jt"; $env:TMP="C:\jt"; $env:JAVA_TOOL_OPTIONS="-Djava.io.tmpdir=C:\jt"
+```
 
 ## Modellen reglene bygger på
 
@@ -36,14 +43,14 @@ Enklest uten systemendringer: last ned en bærbar JDK (Temurin 21, zip, ca. 200 
 ## Kjente begrensninger og risiko
 
 1. **Regler kan ikke telle:** `slots` (antall plasser) kan ikke håndheves av reglene. Overbooking hindres bare av UI/logikk.
-2. **Spørringer mot `gatherings`:** regelen bruker `isMember(resource.data.groupId)`. Firestore krever at en liste-spørring *beviselig* er tillatt ut fra `where`-betingelsene. Spør derfor én gruppe om gangen (`where('groupId','==',gid)`), ikke `in`-lister. Offentlig kalender leses via server (Admin SDK), ikke klient.
+2. **Spørringer mot `gatherings`:** regelen bruker `isMember(resource.data.groupId)`. Firestore krever at en liste-spørring beviselig er tillatt ut fra `where`-betingelsene. Spør derfor én gruppe om gangen (`where('groupId','==',gid)`), ikke `in`-lister. Offentlig kalender leses via server (Admin SDK), ikke klient.
 3. **`pages`/`news` utkast:** enkel `status`. Redigering av en publisert side er synlig umiddelbart (beslutning H).
 4. **Ingen rate limiting** på chat.
-5. **Uverifisert regel-semantikk:** bruken av `Map.get()`, `exists()`/`get()` i funksjoner, og collection group-regelen `match /{path=**}/members/{pid}` må bekreftes av testkjøringen.
-6. Seed-funksjoner i testene bruker `withSecurityRulesDisabled` (rettet etter gjennomgang; Haiku hadde først seedet med reglene på).
+5. **Regel-semantikk bekreftet av testene:** `exists()`/`get()` i funksjoner og collection group-regelen `match /{path=**}/members/{pid}` (tester 11.1–11.3).
+6. **Ikke dekket av testene:** samtidighet, Admin SDK-koden på serveren, utstedelse av custom claims, og kjøring mot ekte Firebase.
 
 ## Neste steg
 
-1. Skaff Java, kjør `npm run test:rules`, rett feil (i regler eller tester, med vurdering av hver).
-2. Oppdater `DESIGN-...md` med resultatet. Først da regnes reglene som verifiserte.
-3. Deretter: Firebase Auth + server-rute som setter claims (`role`, `pid`).
+1. Firebase Auth + server-rute som setter claims (`role`, `pid`) med Admin SDK, med tester (se DESIGN 7b, test 11–13).
+2. Datalaget i appen flyttes til ny modell med smale spørringer.
+3. Test mot et ekte Firebase-prosjekt (Spark) før reglene deployes.
