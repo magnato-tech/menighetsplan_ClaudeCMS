@@ -1,36 +1,75 @@
-Firebase: Security Rules og tester (utkast)
-Status 2026-10-01 natt: reglene er skrevet, men regeltestene er IKKE kjørt. Firestore/Storage-emulatoren krever Java (JDK 21+), og Java finnes ikke på denne maskinen. Reglene regnes derfor ikke som verifisert.
+# Lillesand Misjonskirke – CMS
 
-Del	Status
-src/logic + tests/logic (40 tester, ren TypeScript)	Kjørt: 40 grønne, tsc --noEmit ren
-firestore.rules, storage.rules	Skrevet, ikke kjørt
-tests/rules/*.mjs (127 + 17 tester)	Skrevet av Haiku, gjennomgått og rettet av Claude, ikke kjørt
-Kjøre
-npm install
-npm run test:logic       # fungerer uten Java
-npm run typecheck
-npm run test:rules       # krever Java 21+ i PATH
-test:rules starter emulatoren selv (firebase emulators:exec, prosjekt demo-menighetsplan). Ingen Firebase-konto eller nett er nødvendig utover nedlasting av emulator-filen første gang.
+Egen modul – den nye offentlige nettsiden (skal erstatte eRedaktør). Eneste integrasjon er **Menighetsplan 2.0** via API (se `INTEGRASJON-MENIGHETSPLAN.md`). Foreløpig vises rådataene på en enkel side.
 
-For å få Java (beslutning trengs fra PO)
-Enklest uten systemendringer: last ned en bærbar JDK (Temurin 21, zip, ca. 200 MB) til en mappe og sett JAVA_HOME/PATH for økten. Alternativ: installer via winget install EclipseAdoptium.Temurin.21.JDK.
+Til Menighetsplan har endepunktet, bruker CMS-et en innebygd mock av API-et.
 
-Modellen reglene bygger på
-Custom claims (satt fra server): role = admin | editor, pid = personens id.
-groups/{gid}/members/{pid} med role = leader | deputy | member. Leder er per gruppe.
-Bare admin kan gjøre noen til leder eller endre/fjerne en leder.
-persons/{pid}/private/*: e-post og fødselsdato, bare personen selv og admin.
-groups/{gid}/memberContacts/{pid}: mobilnummer, lesbart for gruppens ledere (beslutning A).
-assignments/{taskId_pid}: fast ID, identitet fra pid-claim (aldri fra skjema).
-Oppgavestatus lagres ikke; den utledes fra tildelinger (src/logic/aktivitetStatus.ts).
-Kjente begrensninger og risiko
-Regler kan ikke telle: slots (antall plasser) kan ikke håndheves av reglene. Overbooking hindres bare av UI/logikk.
-Spørringer mot gatherings: regelen bruker isMember(resource.data.groupId). Firestore krever at en liste-spørring beviselig er tillatt ut fra where-betingelsene. Spør derfor én gruppe om gangen (where('groupId','==',gid)), ikke in-lister. Offentlig kalender leses via server (Admin SDK), ikke klient.
-pages/news utkast: enkel status. Redigering av en publisert side er synlig umiddelbart (beslutning H).
-Ingen rate limiting på chat.
-Uverifisert regel-semantikk: bruken av Map.get(), exists()/get() i funksjoner, og collection group-regelen match /{path=**}/members/{pid} må bekreftes av testkjøringen.
-Seed-funksjoner i testene bruker withSecurityRulesDisabled (rettet etter gjennomgang; Haiku hadde først seedet med reglene på).
-Neste steg
-Skaff Java, kjør npm run test:rules, rett feil (i regler eller tester, med vurdering av hver).
-Oppdater DESIGN-...md med resultatet. Først da regnes reglene som verifiserte.
-Deretter: Firebase Auth + server-rute som setter claims (role, pid).
+## Slik starter du (Windows)
+
+1. **Installer Node.js** (én gang): last ned «LTS» fra <https://nodejs.org> og installer med standardvalg.
+2. Åpne mappen `CMS system` i Filutforsker, klikk i adressefeltet, skriv `cmd` og trykk Enter.
+3. Skriv:
+   ```
+   npm start
+   ```
+4. Åpne <http://localhost:3000> i nettleseren.
+
+Stopp serveren med `Ctrl + C` i det svarte vinduet.
+
+Det trengs **ikke** `npm install` – prosjektet har ingen eksterne pakker.
+
+## Koble til appen
+
+Standard er en innebygd mock av API-et. Menighetsplan-appen (via GAIS) har nå et ekte,
+offentlig API-endepunkt på Google Cloud Run. Sett miljøvariabelen for å bruke det:
+
+```
+set MENIGHETSPLAN_API_URL=https://ais-dev-bpwtuilescw22tmh5zztaw-138177352715.europe-west3.run.app/api/offentlig/arrangementer
+npm start
+```
+
+Endepunktet krever ingen nøkkel/innlogging, filtrerer offentlig/internt server-side
+(kun offentlige arrangementer sendes ut), og har 5 minutters caching (`Cache-Control`).
+Merk: dette er en dev-sandbox på Cloud Run og kan få en «kald start» (litt treg første
+respons) etter lang inaktivitet – appens cache-i-fil-fallback (`innhold/cache/siste-vellykkede.json`)
+tar seg av dette hvis kallet skulle feile eller time ut.
+
+| Variabel | Standard | Betydning |
+|---|---|---|
+| `MENIGHETSPLAN_API_URL` | innebygd mock | Adressen til appens offentlige API |
+| `PORT` | `3000` | Hvilken port siden kjører på |
+| `REFRESH_MINUTES` | `15` | Hvor ofte appen spørres på nytt |
+
+## Test
+
+```
+npm test
+```
+
+Testene sjekker kontrakten mot Menighetsplan: tidssone og sommertid, avlyste arrangementer, manglende felt og at feil format eller ny versjon gir en tydelig feilmelding.
+
+## Kodestruktur
+
+CMS-et er modulær og kan vokse uten omskriving:
+
+- **`lib/arrangementer.js`** – Henting og caching av arrangementer fra Menighetsplan-API
+- **`lib/innhold/lager.js`** – Grensesnitt for lagring av sider (filbasert, senere bytbar mot database)
+- **`lib/visning/felles.js`** – HTML-layout, escapering og formattering av datoer
+- **`lib/visning/blokker.js`** – Register over blokktyper og rendering av innhold
+- **`lib/visning/forside.js`** – Forsiden med arrangementer
+- **`lib/visning/side.js`** – Visning av faste sider
+- **`lib/visning/debug.js`** – Debug-side med rådata
+- **`innhold/sider/`** – JSON-filer for hver fast side (én fil per slug)
+
+Sider er helt separate fra arrangementer og bruker samme HTML-layout. For å legge til en ny blokktype: åpne `lib/visning/blokker.js`, legg til en renderer-funksjon og registrer den i `blokker`-objektet.
+
+## Innhold
+
+| Fil | Hva |
+|---|---|
+| `server.js` | Webserveren og rådata-siden |
+| `lib/kilder/menighetsplan.js` | Adapter for Menighetsplan-API (eneste sted som kjenner appen) |
+| `data/menighetsplan-mock.json` | Eksempelsvar fra Menighetsplan-API (kontrakt v1) |
+| `public/logo.svg` | Foreløpig logo |
+| `ARKITEKTUR.md` | Teknisk forslag fra Sprint 0 |
+| `INTEGRASJON-MENIGHETSPLAN.md` | API-kontrakten mot Menighetsplan |
