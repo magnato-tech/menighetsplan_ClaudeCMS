@@ -6,7 +6,9 @@
   "type": "module",
   "engines": { "node": ">=20" },
   "scripts": {
-    "start": "node server.js",
+    "start": "node scripts/start-v2.mjs",
+    "dev": "node scripts/start-v2.mjs",
+    "start:mvp": "node server.js",
     "test": "node --test"
   }
 }

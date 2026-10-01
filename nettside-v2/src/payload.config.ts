@@ -1,5 +1,7 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { sqliteAdapter } from '@payloadcms/db-sqlite'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import fs from 'fs'
 import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
@@ -17,6 +19,11 @@ import { GruppeMeldinger } from './collections/GruppeMeldinger'
 import { Oppmoter } from './collections/Oppmoter'
 import { Forsideinnstillinger } from './globals/Forsideinnstillinger'
 
+// SQLite-filen trenger at mappen finnes (demo uten Postgres).
+if (!(process.env.DATABASE_URL || '').startsWith('postgres') && !process.env.SQLITE_URL) {
+  fs.mkdirSync(path.resolve(process.cwd(), 'data'), { recursive: true })
+}
+
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
@@ -33,14 +40,20 @@ export default buildConfig({
   collections: [Users, Media, Sider, Nyheter, Aktiviteter, Grupper, Oppgaver, Tildelinger, GruppeMeldinger, Oppmoter],
   globals: [Forsideinnstillinger],
   editor: lexicalEditor(),
-  secret: process.env.PAYLOAD_SECRET || '',
+  // Reserveverdi KUN for demo (AI Studio/lokalt). Sett alltid PAYLOAD_SECRET i ekte drift.
+  secret: process.env.PAYLOAD_SECRET || 'demo-hemmelighet-ikke-for-produksjon',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
-  db: postgresAdapter({
-    pool: {
-      connectionString: process.env.DATABASE_URL || '',
-    },
-  }),
+  // Postgres hvis DATABASE_URL peker på en postgres-database, ellers en lokal SQLite-fil (demo/AI Studio).
+  db: (process.env.DATABASE_URL || '').startsWith('postgres')
+    ? postgresAdapter({
+        pool: {
+          connectionString: process.env.DATABASE_URL || '',
+        },
+      })
+    : sqliteAdapter({
+        client: { url: process.env.SQLITE_URL || 'file:./data/nettside.db' },
+      }),
   sharp,
 })

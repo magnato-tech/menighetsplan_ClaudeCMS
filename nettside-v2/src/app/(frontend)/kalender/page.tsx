@@ -51,3 +51,6 @@ export default async function KalenderPage() {
     </div>
   )
 }
+
+// Vis alltid ferske data fra databasen, ikke en side frosset ved bygging.
+export const dynamic = 'force-dynamic'
