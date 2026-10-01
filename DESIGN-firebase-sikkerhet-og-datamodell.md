@@ -214,6 +214,17 @@ Et medlem kan ikke opprette, endre eller slette en tildeling på vegne av en ann
 Samme person kan ikke ha to tildelinger på samme oppgave (fast dokument-ID).
 statusForAktivitet: «Forfall» forsvinner når oppgaven er dekket på nytt (enhetstest på ren logikk).
 Tre tildelinger på en oppgave med slots = 3 gir «Dekket» først når alle tre er bekreftet.
+10c. Beslutninger tatt under regelskriving (natt til 2026-10-01, Claude)
+Tatt uten PO til stede, for å komme videre. Kan endres.
+
+Claims: pid i tillegg til role. Brukerens person-id ligger i token (request.auth.token.pid). Da trenger regler ikke slå opp users/{uid}, og eierskapssjekker blir billige og enkle.
+Medlemsdokumenter nøkles på pid (groups/{gid}/members/{pid}), ikke uid. Personer uten innlogging kan dermed være medlemmer.
+Mobil til ledere via groups/{gid}/memberContacts/{pid} (beslutning A). Personen deler selv nummeret med gruppen. Fødselsdato og e-post forblir i persons/{pid}/private/contact (bare personen og admin).
+Bare admin kan gjøre noen til leder eller endre/fjerne en leder. Ledere kan legge til og fjerne medlemmer og nestledere.
+gatherings: felt public og groupId. public: true = lesbart for alle. groupId: null = felles for menigheten (bare admin skriver). Vanlige innloggede leser felles arrangementer.
+Tildelinger: ID = taskId_pid. Medlem kan opprette egen tildeling (pending/confirmed) og endre egen til confirmed/declined/withdrawn. Leder/admin kan sette alle gyldige statuser. taskId, groupId, pid er uforanderlige.
+Kjente begrensninger: slots kan ikke håndheves av regler. gatherings må spørres per gruppe. Ingen rate limiting. Se README.md i regelprosjektet.
+Status: reglene er skrevet, men regeltestene er ikke kjørt (Java mangler for emulatoren). Ren logikk (gruppeLogikk, aktivitetStatus med rettet Forfall-logikk): 40 tester kjørt og grønne.
 11. Arbeidsregel og byggerekkefølge
 Ingen nye funksjoner bygges før denne målarkitekturen er gjennomgått og godkjent. Ingen eksisterende data slettes eller migreres før ny modell og migreringsstrategi er verifisert. Reglene i punkt 6 er forslag og testgrunnlag, ikke produksjonsregler, før testene er kjørt og resultatet er dokumentert.
 
